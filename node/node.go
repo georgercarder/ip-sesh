@@ -2,10 +2,7 @@ package node
 
 import (
 	"context"
-	"crypto/rsa"
-	"crypto/x509"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/ipfs/go-ipfs/core"
@@ -42,7 +39,7 @@ func newIpfsNode() (n interface{}) { // *IpfsNode
 		DisableEncryptedConnections: false,
 		ExtraOpts: map[string]bool{
 			"mplex":  true,
-			"pubsub": true,
+			//"pubsub": true,
 		},
 
 		Routing: libp2p.DHTClientOption,
@@ -53,34 +50,7 @@ func newIpfsNode() (n interface{}) { // *IpfsNode
 		//LogError.Println("NewIpfsNode:", err)
 		return
 	}
-	nn := (*IpfsNode)(node)
-	err = nn.SetPrivateKey()
-	if err != nil {
-		//LogError.Println("newIpfsNode:", err)
-		return
-	}
-	n = nn
-	return
-}
-
-var g_NodeData = new(NodeData)
-
-type NodeData struct {
-	sync.RWMutex
-	privateKey *rsa.PrivateKey
-}
-
-func (n *IpfsNode) SetPrivateKey() (err error) {
-	raw, err := n.PrivateKey.Raw()
-	if err != nil {
-		return
-	}
-	pk, err := x509.ParsePKCS1PrivateKey(raw)
-	if err != nil {
-		return
-	}
-	// note: g_NodeData is locked by caller function
-	g_NodeData.privateKey = pk
+	n = (*IpfsNode)(node)
 	return
 }
 
