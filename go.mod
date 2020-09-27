@@ -1,4 +1,4 @@
-module github.com/georgercarder/ipsshd.git
+module github.com/georgercarder/ipsshd
 
 go 1.14
 
