@@ -29,5 +29,10 @@ type DomNameMgr struct {
 
 func newDomNameMgr() (n interface{}) { // *DomNameMgr
 	fmt.Println("debug newDomeNameMgr")
+	// TODO
+	// checks /etc/ipsshd/ipsshd.conf
+	// if domName not set, SafelyShutdown emitting error
+	// otherwise calls dnsLink w domName
+
 	return
 }
