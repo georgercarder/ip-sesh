@@ -1,7 +1,7 @@
 package node
 
 import (
-	"crypto/rsa"
+	"crypto/ed25519"
 )
 
 // read in ~/.ipssh/authorized_keys
@@ -14,7 +14,7 @@ type SSHMgr struct {
 	// TODO
 }
 
-func (s *SSHMgr) IsAuthorized(pk *rsa.PublicKey) (tf bool) {
+func (s *SSHMgr) IsAuthorized(pk *ed25519.PublicKey) (tf bool) {
 	// TODO
 	return
 }

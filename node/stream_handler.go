@@ -1,7 +1,7 @@
 package node
 
 import (
-	"crypto/rsa"
+	"crypto/ed25519"
 	"fmt"
 	"io"
 
@@ -54,8 +54,8 @@ func initStream(s network.Stream) (err error) {
 	return sendChallenge(s, pk)
 }
 
-func sendChallenge(s network.Stream, pk *rsa.PublicKey) (err error) {
-	chlg, err := prepareChallenge(pk)
+func sendChallenge(s network.Stream, pk *ed25519.PublicKey) (err error) {
+	chlg, err := prepareChallenge()
 	if err != nil {
 		return
 	}

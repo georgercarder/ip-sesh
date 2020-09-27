@@ -1,7 +1,7 @@
 package node
 
 import (
-	"crypto/rsa"
+	"crypto/ed25519"
 
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -21,7 +21,7 @@ func (ss StreamStatus) Byte() (b byte) {
 	return
 }
 
-func readIPSSHPubKey(s network.Stream) (pk *rsa.PublicKey, err error) {
+func readIPSSHPubKey(s network.Stream) (pk *ed25519.PublicKey, err error) {
 	// TODO
 	return
 }
@@ -37,13 +37,15 @@ type pendingHandshakes struct {
 	// TODO
 }
 
-func (p *pendingHandshakes) Put(b []byte, pk *rsa.PublicKey) {
+func (p *pendingHandshakes) Put(b []byte, pk *ed25519.PublicKey) {
 	// TODO
 	return
 }
 
 func (p *pendingHandshakes) Check(b []byte) (ok bool) {
 	// TODO
+	// checks if ed25519 sig is valid
+
 	return
 }
 
