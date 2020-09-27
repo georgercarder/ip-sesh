@@ -53,7 +53,21 @@ func newIpfsNode() (n interface{}) { // *IpfsNode
 	return
 }
 
+var _ = initStreamCH()
+
+// a hack to get SetStreamHandler to not be in reference loop with g_Node
+func initStreamCH() error {
+	go func() {
+		SetStreamHandler()
+	}()
+	return nil
+}
+
 func FindPeer(ctx context.Context, pid peer.ID) (pAddrInfo peer.AddrInfo,
 	err error) {
 	return G_Node().DHT.FindPeer(ctx, pid)
+}
+
+func SetStreamHandler() {
+	G_Node().PeerHost.SetStreamHandler("/ipssh/0.0.1", StreamHandler)
 }
