@@ -6,6 +6,11 @@ import (
 )
 
 func main() {
+	
 	g := nd.G_Node()
-	fmt.Println("first", g)
+	fmt.Println("debug", g)
+	
+	// initializeURL // TODO
+
+	// daemon.Listen // TODO
 }
