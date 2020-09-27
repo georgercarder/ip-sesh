@@ -8,16 +8,11 @@ import (
 	"sync"
 	"time"
 
-//	. "github.com/georgercarder/echos_echos_/common"
-
-	mi "github.com/georgercarder/mod_init"
-
 	"github.com/ipfs/go-ipfs/core"
-
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
 	"github.com/libp2p/go-libp2p-core/peer"
-
-//	"github.com/georgercarder/echos_echos_/stream"
+	
+	mi "github.com/georgercarder/mod_init"
 )
 
 type IpfsNode core.IpfsNode
@@ -31,30 +26,13 @@ func G_Node() (n *IpfsNode) {
 		return
 	}
 	return nn.(*IpfsNode)
+	return
 }
 
 const ModInitTimeout = 3 * time.Second // TODO tune
 
 var modInitializerIpfs = mi.NewModInit(newIpfsNode,
 	ModInitTimeout, fmt.Errorf("*IpfsNode init error."))
-
-var _ = initStreamCH()
-
-// a hack to get SetStreamHandler to not be in reference loop with g_Node
-func initStreamCH() error {
-	go func() {
-		G_Node() // sets g_Node
-		//SetStreamHandler() // TODO
-	}()
-	return nil
-}
-
-var g_NodeData = new(NodeData)
-
-type NodeData struct {
-	sync.RWMutex
-	privateKey *rsa.PrivateKey
-}
 
 func newIpfsNode() (n interface{}) { // *IpfsNode
 	ncfg := &core.BuildCfg{
@@ -85,18 +63,12 @@ func newIpfsNode() (n interface{}) { // *IpfsNode
 	return
 }
 
-func (n *IpfsNode) PublicKey() (p *rsa.PublicKey, err error) {
-	g_NodeData.RLock()
-	defer g_NodeData.RUnlock()
-	p = g_NodeData.privateKey.Public().(*rsa.PublicKey)
-	return
-}
+var g_NodeData = new(NodeData)
 
-/*func (n *IpfsNode) DecryptOAEPRSA(bMessage []byte) (p []byte, err error) {
-	g_NodeData.RLock()
-	defer g_NodeData.RUnlock()
-	return stream.DecryptOAEPRSA(bMessage, g_NodeData.privateKey)
-}*/
+type NodeData struct {
+	sync.RWMutex
+	privateKey *rsa.PrivateKey
+}
 
 func (n *IpfsNode) SetPrivateKey() (err error) {
 	raw, err := n.PrivateKey.Raw()
