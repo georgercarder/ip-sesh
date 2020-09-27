@@ -6,7 +6,7 @@ import (
 
 func main() {
 	go nd.G_Node()
-	
+
 	// daemon.Listen // TODO
-	select{}
+	select {}
 }

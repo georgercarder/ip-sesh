@@ -3,7 +3,7 @@ package node
 import (
 	"fmt"
 	"time"
-	
+
 	mi "github.com/georgercarder/mod_init"
 )
 
@@ -28,9 +28,9 @@ type DomNameMgr struct {
 }
 
 func newDomNameMgr() (n interface{}) { // *DomNameMgr
-	fmt.Println("debug newDomeNameMgr")
+	fmt.Println("debug newDomNameMgr")
 	// TODO
-	// checks /etc/ipsshd/ipsshd.conf
+	// checks ~/.ipsshd/ipsshd.conf
 	// if domName not set, SafelyShutdown emitting error
 	// otherwise calls dnsLink w domName
 

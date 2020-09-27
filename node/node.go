@@ -8,7 +8,7 @@ import (
 	"github.com/ipfs/go-ipfs/core"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
 	"github.com/libp2p/go-libp2p-core/peer"
-	
+
 	mi "github.com/georgercarder/mod_init"
 )
 
@@ -37,7 +37,7 @@ func newIpfsNode() (n interface{}) { // *IpfsNode
 		Online:                      true,
 		DisableEncryptedConnections: false,
 		ExtraOpts: map[string]bool{
-			"mplex":  true,
+			"mplex": true,
 			//"pubsub": true,
 		},
 
