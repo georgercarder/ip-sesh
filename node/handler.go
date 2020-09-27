@@ -1,15 +1,14 @@
 package node
 
 import (
+	"fmt"
+
 	"github.com/libp2p/go-libp2p-core/network"
 )
 
 // TODO
 
 // will handle streams
-
-// check attempt at connection against
-// authorized_keys from ~/.ipssh/authorized_keys
 
 func StreamHandler(s network.Stream) {
 	//fmt.Println("debug new stream!")
@@ -23,6 +22,13 @@ func StreamHandler(s network.Stream) {
 
 func handleStream(s network.Stream) (err error) {
 	// TODO
+	authed := G_SSHMgr.IsAuthorized(s.Conn().RemotePeer())
+	if !authed {
+		err = fmt.Errorf("handleStream: "+
+			"RemotePeer not authorized.",
+			s.Conn().RemotePeer().Pretty())
+		return
+	}
+
 	return
 }
-
