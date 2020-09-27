@@ -10,7 +10,8 @@ func main() {
 	g := nd.G_Node()
 	fmt.Println("debug", g)
 	
-	// initializeURL // TODO
+	// initializeDomainName // TODO
 
 	// daemon.Listen // TODO
+	select{}
 }
