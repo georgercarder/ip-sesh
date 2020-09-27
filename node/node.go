@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"sync"
+	"time"
 
 //	. "github.com/georgercarder/echos_echos_/common"
 
@@ -23,14 +24,16 @@ type IpfsNode core.IpfsNode
 
 func G_Node() (n *IpfsNode) {
 	nn, err := modInitializerIpfs.Get()
-	if !IsNil(err) {
-		LogError.Println("G_Node:", err)
-		reason := err
-		SafelyShutdown(reason)
+	if err != nil {
+		//LogError.Println("G_Node:", err)
+		//reason := err
+		//SafelyShutdown(reason)
 		return
 	}
 	return nn.(*IpfsNode)
 }
+
+const ModInitTimeout = 3 * time.Second // TODO tune
 
 var modInitializerIpfs = mi.NewModInit(newIpfsNode,
 	ModInitTimeout, fmt.Errorf("*IpfsNode init error."))
@@ -41,7 +44,7 @@ var _ = initStreamCH()
 func initStreamCH() error {
 	go func() {
 		G_Node() // sets g_Node
-		SetStreamHandler()
+		//SetStreamHandler() // TODO
 	}()
 	return nil
 }
@@ -69,13 +72,13 @@ func newIpfsNode() (n interface{}) { // *IpfsNode
 	ctx := context.Background()
 	node, err := core.NewNode(ctx, ncfg)
 	if err != nil {
-		LogError.Println("NewIpfsNode:", err)
+		//LogError.Println("NewIpfsNode:", err)
 		return
 	}
 	nn := (*IpfsNode)(node)
 	err = nn.SetPrivateKey()
 	if err != nil {
-		LogError.Println("newIpfsNode:", err)
+		//LogError.Println("newIpfsNode:", err)
 		return
 	}
 	n = nn
