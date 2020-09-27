@@ -23,7 +23,6 @@ func G_Node() (n *IpfsNode) {
 		return
 	}
 	return nn.(*IpfsNode)
-	return
 }
 
 const ModInitTimeout = 3 * time.Second // TODO tune
