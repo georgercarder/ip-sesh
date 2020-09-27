@@ -1,15 +1,12 @@
 package node
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"io"
 
 	"github.com/libp2p/go-libp2p-core/network"
 )
-
-// TODO in progress
-
-// will handle streams
 
 func StreamHandler(s network.Stream) {
 	//fmt.Println("debug new stream!")
@@ -22,17 +19,73 @@ func StreamHandler(s network.Stream) {
 }
 
 func handleStream(s network.Stream) (err error) {
-	authed := G_SSHMgr.IsAuthorized(s.Conn().RemotePeer())
-	if !authed {
+	ss := make([]byte, 1)
+	_, err = s.Read(ss)
+	if err != nil {
+		return
+	}
+	switch StreamStatus(ss[0]) {
+	case InitStream:
+		return initStream(s)
+	case HandshakeResponse:
+		return checkHandshakeResponse(s)
+	case ShellFrame:
+		return shellFrame(s)
+	}
+	return fmt.Errorf("handleStream: "+
+		"StreamStatus not supported.", ss[0])
+}
+
+func initStream(s network.Stream) (err error) {
+	pk, err := readIPSSHPubKey(s)
+	if err != nil {
+		return
+	}
+	// note: this pk is to ipssh keyset which is
+	// different from ipfs node credentials.
+	// See main doc.
+	if !G_SSHMgr.IsAuthorized(pk) {
 		err = fmt.Errorf("handleStream: "+
 			"RemotePeer not authorized.",
 			s.Conn().RemotePeer().Pretty())
+		// LogError.Println(err)
 		return
 	}
-	return startSession(s)
+	return sendChallenge(s, pk)
 }
 
-func startSession(s network.Stream) (err error) {
+func sendChallenge(s network.Stream, pk *rsa.PublicKey) (err error) {
+	chlg, err := prepareChallenge(pk)
+	if err != nil {
+		return
+	}
+	g_pendingHandshakes.Put(chlg, pk)
+	return sendBackToClient(s, HandshakeResponse, chlg)
+}
+
+func checkHandshakeResponse(s network.Stream) (err error) {
+	hsRes, err := readHandshakeResponse(s)
+	if err != nil {
+		return
+	}
+	ok := checkAgainstPendingHandshakes(hsRes)
+	g_activeSessions.Put(s.Conn().RemotePeer())
+	return sendBackToClient(s, HandshakeResponse,
+		[]byte{Boole2Byte(ok)})
+}
+
+func shellFrame(s network.Stream) (err error) {
+	ok := g_activeSessions.Check(s.Conn().RemotePeer())
+	if !ok {
+		err = fmt.Errorf("shellFrame: "+
+			"not an active session.",
+			s.Conn().RemotePeer())
+		return sendBackToClient(s, Error, nil)
+	}
+	return runSession(s)
+}
+
+func runSession(s network.Stream) (err error) {
 	sh := initShell()
 	go func() {
 		// send stream back stdout, stderr
@@ -45,24 +98,5 @@ func startSession(s network.Stream) (err error) {
 		}
 	}()
 	_, err = io.Copy(sh, s)
-	return
-}
-
-func initShell() (s *shell) {
-	// TODO
-	return
-}
-
-type shell struct {
-	// TODO
-}
-
-func (s *shell) Read(b []byte) (n int, err error) {
-	// TODO
-	return
-}
-
-func (s *shell) Write(b []byte) (n int, err error) {
-	// TODO
 	return
 }

@@ -1,7 +1,7 @@
 package node
 
 import (
-	"github.com/libp2p/go-libp2p-core/peer"
+	"crypto/rsa"
 )
 
 // read in ~/.ipssh/authorized_keys
@@ -14,7 +14,7 @@ type SSHMgr struct {
 	// TODO
 }
 
-func (s *SSHMgr) IsAuthorized(pid peer.ID) (tf bool) {
+func (s *SSHMgr) IsAuthorized(pk *rsa.PublicKey) (tf bool) {
 	// TODO
 	return
 }
