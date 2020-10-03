@@ -1,4 +1,4 @@
-module github.com/georgercarder/ipsshd
+module github.com/georgercarder/ip-sesh
 
 go 1.14
 
