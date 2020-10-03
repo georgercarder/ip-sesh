@@ -11,6 +11,8 @@ type StreamStatus byte
 
 const (
 	InitStream StreamStatus = iota
+	HandshakeInitPublicKeys
+	HandshakeInitChallenge
 	HandshakeResponse
 	ShellFrame
 	Error
@@ -54,6 +56,11 @@ func checkAgainstPendingHandshakes(hsRes []byte) (ok bool) {
 }
 
 func sendBackToClient(
+	s network.Stream, status StreamStatus, msg []byte) (err error) {
+	return writeToStream(s, status, msg)
+}
+
+func writeToStream(
 	s network.Stream, status StreamStatus, msg []byte) (err error) {
 	fullMsg := append([]byte{status.Byte()}, msg...)
 	_, err = s.Write(fullMsg)

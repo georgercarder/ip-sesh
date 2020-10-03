@@ -2,6 +2,7 @@ package node
 
 import (
 	"crypto/ed25519"
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -25,8 +26,14 @@ func handleStream(s network.Stream) (err error) {
 		return
 	}
 	switch StreamStatus(ss[0]) {
-	case InitStream:
-		return initStream(s)
+	/*case InitStream:
+	return initStream(s)*/
+	case HandshakeInitPublicKeys:
+		// TODO
+		return nil
+	case HandshakeInitChallenge:
+		// TODO
+		return nil
 	case HandshakeResponse:
 		return checkHandshakeResponse(s)
 	case ShellFrame:
@@ -36,7 +43,8 @@ func handleStream(s network.Stream) (err error) {
 		"StreamStatus not supported.", ss[0])
 }
 
-func initStream(s network.Stream) (err error) {
+// TODO DELETE but currently keeping for reference during dev
+/*func initStream(s network.Stream) (err error) {
 	pk, err := readIPSSHPubKey(s)
 	if err != nil {
 		return
@@ -52,6 +60,14 @@ func initStream(s network.Stream) (err error) {
 		return
 	}
 	return sendChallenge(s, pk)
+}*/
+
+func sendPublicKeys(s network.Stream, pks []*ed25519.PublicKey) (err error) {
+	b, err := json.Marshal(pks)
+	if err != nil {
+		// TODO log
+	}
+	return sendBackToClient(s, HandshakeInitPublicKeys, b)
 }
 
 func sendChallenge(s network.Stream, pk *ed25519.PublicKey) (err error) {
@@ -59,8 +75,8 @@ func sendChallenge(s network.Stream, pk *ed25519.PublicKey) (err error) {
 	if err != nil {
 		return
 	}
-	g_pendingHandshakes.Put(chlg, pk)
-	return sendBackToClient(s, HandshakeResponse, chlg)
+	//g_pendingHandshakes.Put(chlg, pk)
+	return sendBackToClient(s, HandshakeInitChallenge, chlg)
 }
 
 func checkHandshakeResponse(s network.Stream) (err error) {
