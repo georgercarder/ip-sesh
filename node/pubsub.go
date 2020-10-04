@@ -46,14 +46,15 @@ func newPubSub() (p interface{}) { // *pubSub
 func handleSubscription(sNa *subNAlert) {
 	for {
 		msg, err := sNa.s.Next(context.Background())
-		//fmt.Println("debug readSubs:", msg, err)
+		fmt.Println("debug readSubs:", msg, err)
 		b, err := json.Marshal(msg)
 		if err != nil {
 			//LogError.Println("handleSubscription:", err)
 			continue
 		}
 		b = b
-		//go alerts.G_Alerts().SendAlert(sNa.alertName, string(b)) // FIXME
+		//go alerts.G_Alerts().SendAlert(sNa.alertName, string(b))
+		// FIXME
 		// TODO the reaction to this alert will initiate handshake
 	}
 }

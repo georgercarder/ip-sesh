@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	mi "github.com/georgercarder/mod_init"
@@ -23,10 +24,6 @@ const DomNameMgrInitTimeout = 3 * time.Second // TODO tune
 var modInitializerDomNameMgr = mi.NewModInit(newDomNameMgr,
 	DomNameMgrInitTimeout, fmt.Errorf("*DomNameMgr init error."))
 
-type DomNameMgr struct {
-	// TODO
-}
-
 func newDomNameMgr() (n interface{}) { // *DomNameMgr
 	fmt.Println("debug newDomNameMgr")
 	// TODO
@@ -34,5 +31,34 @@ func newDomNameMgr() (n interface{}) { // *DomNameMgr
 	// if domName not set, SafelyShutdown emitting error
 	// otherwise calls dnsLink w domName
 
+	return
+}
+
+func ServeDomain(domainName string) {
+	G_DomNameMgr().serveDomain(domainName)
+}
+
+func GetDomainNames() (names []string) {
+	return G_DomNameMgr().getDomainNames()
+}
+
+type DomNameMgr struct {
+	sync.RWMutex
+	names map[string]bool
+}
+
+func (d *DomNameMgr) serveDomain(domainName string) {
+	d.Lock()
+	defer d.Unlock()
+	d.names[domainName] = true
+	Subscribe(domainName)
+}
+
+func (d *DomNameMgr) getDomainNames() (names []string) {
+	d.RLock()
+	defer d.Unlock()
+	for n, _ := range d.names {
+		names = append(names, n)
+	}
 	return
 }
