@@ -1,8 +1,14 @@
 package node
 
 import (
+	//	"fmt"
+	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"time"
+
+	"github.com/libp2p/go-libp2p-core/peer"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
 
 // TODO
@@ -14,7 +20,7 @@ import (
 func StartHandshake(domainName string) {
 	pubKey := getPubKey(domainName) // in ssh_mgr
 	nonce := genNonce()             // in crypto
-	hash := Hash(pubKey, nonce)
+	hash := Hash(PubKey2Slice(pubKey), nonce)
 	hp := &HandshakePacket{DomainName: domainName,
 		Nonce: nonce, Hash: hash}
 	// TODO register w Handshake_Mgr
@@ -27,6 +33,8 @@ type HandshakePacket struct {
 	DomainName string
 	Nonce      []byte
 	Hash       []byte
+	Challenge  []byte
+	PubKey     *ed25519.PublicKey
 }
 
 func (hp *HandshakePacket) Bytes() (b []byte) {
@@ -34,6 +42,12 @@ func (hp *HandshakePacket) Bytes() (b []byte) {
 	if err != nil {
 		// TODO LOG ERR
 	}
+	return
+}
+
+func Slice2HandshakePacket(b []byte) (hp *HandshakePacket, err error) {
+	hp = new(HandshakePacket)
+	err = json.Unmarshal(b, &hp)
 	return
 }
 
@@ -61,5 +75,31 @@ func publishUntilChallenge(hp *HandshakePacket) {
 
 // 2. from alert, scan pubKeys w nonce, compare to H,
 //    if has pubKey, send challenge to client
+func checkAndRespondToAlert(a []byte) {
+	m := new(pubsub.Message)
+	err := json.Unmarshal(a, &m)
+	if err != nil {
+		// TODO LOG
+	}
+	hp := new(HandshakePacket)
+	err = json.Unmarshal(m.Data, &hp)
+	if err != nil {
+		// TODO LOG ERR
+	}
+	pid, err := peer.IDFromBytes(m.From)
+	if err != nil {
+		/// TODO LOG ERR
+	}
+	pubKey, ok := checkPubKeys(hp.Hash, hp.Nonce)
+	if !ok {
+		// log that pubkey doesn't exist
+		return
+	}
+	s, err := StartStream(context.Background(), pid)
+	if err != nil {
+		// TODO HANDLE
+	}
+	go sendChallenge(s, pubKey)
+}
 
 // 4. validate challenge response, put pid in active screens

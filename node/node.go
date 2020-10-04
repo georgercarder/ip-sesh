@@ -7,6 +7,7 @@ import (
 
 	"github.com/ipfs/go-ipfs/core"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
+	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 
 	mi "github.com/georgercarder/mod_init"
@@ -69,5 +70,10 @@ func FindPeer(ctx context.Context, pid peer.ID) (pAddrInfo peer.AddrInfo,
 }
 
 func SetStreamHandler() {
-	G_Node().PeerHost.SetStreamHandler("/ipssh/0.0.1", StreamHandler)
+	G_Node().PeerHost.SetStreamHandler("/ip-sesh/0.0.1", StreamHandler)
+}
+
+func StartStream(
+	ctx context.Context, pid peer.ID) (s network.Stream, err error) {
+	return G_Node().PeerHost.NewStream(ctx, pid, "/ip-sesh/0.0.1")
 }

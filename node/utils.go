@@ -60,6 +60,11 @@ func sendBackToClient(
 	return writeToStream(s, status, msg)
 }
 
+func sendToStream(
+	s network.Stream, status StreamStatus, msg []byte) (err error) {
+	return writeToStream(s, status, msg)
+}
+
 func writeToStream(
 	s network.Stream, status StreamStatus, msg []byte) (err error) {
 	fullMsg := append([]byte{status.Byte()}, msg...)

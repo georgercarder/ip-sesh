@@ -2,7 +2,7 @@ package node
 
 import (
 	"crypto/ed25519"
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
 	"io"
 
@@ -60,7 +60,7 @@ func handleStream(s network.Stream) (err error) {
 		return
 	}
 	return sendChallenge(s, pk)
-}*/
+}
 
 func sendPublicKeys(s network.Stream, pks []*ed25519.PublicKey) (err error) {
 	b, err := json.Marshal(pks)
@@ -68,12 +68,12 @@ func sendPublicKeys(s network.Stream, pks []*ed25519.PublicKey) (err error) {
 		// TODO log
 	}
 	return sendBackToClient(s, HandshakeInitPublicKeys, b)
-}
+}*/
 
 func sendChallenge(s network.Stream, pk *ed25519.PublicKey) (err error) {
 	chlg := prepareChallenge()
-	//g_pendingHandshakes.Put(chlg, pk)
-	return sendBackToClient(s, HandshakeInitChallenge, chlg)
+	hp := &HandshakePacket{Challenge: chlg, PubKey: pk}
+	return sendToStream(s, HandshakeInitChallenge, hp.Bytes())
 }
 
 func checkHandshakeResponse(s network.Stream) (err error) {
