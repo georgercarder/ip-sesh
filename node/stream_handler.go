@@ -71,10 +71,7 @@ func sendPublicKeys(s network.Stream, pks []*ed25519.PublicKey) (err error) {
 }
 
 func sendChallenge(s network.Stream, pk *ed25519.PublicKey) (err error) {
-	chlg, err := prepareChallenge()
-	if err != nil {
-		return
-	}
+	chlg := prepareChallenge()
 	//g_pendingHandshakes.Put(chlg, pk)
 	return sendBackToClient(s, HandshakeInitChallenge, chlg)
 }

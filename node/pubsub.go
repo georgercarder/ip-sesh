@@ -6,10 +6,14 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/georgercarder/alerts"
 	mi "github.com/georgercarder/mod_init"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
+
+// TODO put in own module.
+// this is generic and isolated to be own module.
 
 func G_pubSub() (p *pubSub) {
 	pp, err := modInitializerPubSub.Get()
@@ -53,10 +57,7 @@ func handleSubscription(sNa *subNAlert) {
 			//LogError.Println("handleSubscription:", err)
 			continue
 		}
-		b = b
-		//go alerts.G_Alerts().SendAlert(sNa.alertName, string(b))
-		// FIXME
-		// TODO the reaction to this alert will initiate handshake
+		go alerts.G_Alerts().SendAlert(sNa.alertName, b)
 	}
 }
 
@@ -86,7 +87,7 @@ func publish(topic string, data []byte) (err error) {
 	return n.PubSub.Publish(key, data)
 }
 
-func Subscribe(topic string) (err error) {
+func Subscribe(topic, alertName string) (err error) {
 	key := PubSubTopicHashed(topic)
 	sub, err := subscribe(key)
 	if err != nil {
@@ -94,9 +95,8 @@ func Subscribe(topic string) (err error) {
 		return
 	}
 	sNa := &subNAlert{s: sub,
-		alertName: "TODO"} // TODO
+		alertName: alertName}
 	G_pubSub().M[topic] = sNa
-	fmt.Println("debug", topic, sNa)
 	go handleSubscription(sNa)
 	return
 }

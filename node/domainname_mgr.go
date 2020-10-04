@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/georgercarder/alerts"
 	mi "github.com/georgercarder/mod_init"
 )
 
@@ -31,7 +32,7 @@ func newDomNameMgr() (n interface{}) { // *DomNameMgr
 	// if domName not set, SafelyShutdown emitting error
 	// otherwise calls dnsLink w domName
 	nn := new(DomNameMgr)
-	nn.names = make(map[string]bool)
+	nn.names = make(map[string]*DomName)
 	n = nn
 	return
 }
@@ -46,15 +47,40 @@ func GetDomainNames() (names []string) {
 
 type DomNameMgr struct {
 	sync.RWMutex
-	names map[string]bool
+	names map[string]*DomName
+}
+
+type DomName struct {
+	name  string
+	alert (<-chan interface{})
 }
 
 func (d *DomNameMgr) serveDomain(domainName string) {
 	d.Lock()
 	defer d.Unlock()
-	d.names[domainName] = true
-	Subscribe(domainName)
+	dn := &DomName{name: domainName, alert: newDomainAlert(domainName)}
+	go handleDomAlerts(dn)
+	d.names[domainName] = dn
+	Subscribe(domainName, domainName) // topic, alertName
 }
+
+func handleDomAlerts(dn *DomName) {
+	name := dn.name
+	for {
+		a := <-dn.alert
+		fmt.Println("debug handleDomAlerts", name, a)
+	}
+}
+
+func newDomainAlert(domainName string) <-chan interface{} {
+	sub, err := alerts.G_Alerts().NewSubscription(domainName)
+	if err != nil {
+		// TODO log
+	}
+	return sub
+}
+
+// TODO SUBSCRIBE TO ALERTS
 
 func (d *DomNameMgr) getDomainNames() (names []string) {
 	d.RLock()

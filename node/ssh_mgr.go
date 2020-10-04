@@ -18,3 +18,8 @@ func (s *SSHMgr) IsAuthorized(pk *ed25519.PublicKey) (tf bool) {
 	// TODO
 	return
 }
+
+func getPubKey(domainName string) (pk []byte) {
+	// TODO
+	return
+}

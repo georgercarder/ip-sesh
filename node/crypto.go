@@ -2,19 +2,31 @@ package node
 
 import (
 	"crypto/rand"
+
+	gthCrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
-func prepareChallenge() (chlg []byte, err error) {
-	randToken, err := genRandToken()
-	if err != nil {
-		return
-	}
-	chlg = randToken
+func prepareChallenge() (chlg []byte) {
+	chlg = genRandToken()
 	return
 }
 
-func genRandToken() (tk []byte, err error) {
+func genNonce() (n []byte) {
+	n = genRandToken()
+	return
+}
+
+func genRandToken() (tk []byte) {
 	tk = make([]byte, 32)
-	_, err = rand.Read(tk)
+	rand.Read(tk)
+	return
+}
+
+func Hash(b ...[]byte) (h []byte) {
+	var all []byte
+	for _, bb := range b {
+		all = append(all, bb...)
+	}
+	h = gthCrypto.Keccak256(all)
 	return
 }
