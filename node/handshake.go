@@ -1,10 +1,10 @@
 package node
 
 import (
-	//	"fmt"
 	"context"
 	"crypto/ed25519"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -90,11 +90,13 @@ func checkAndRespondToAlert(a []byte) {
 	if err != nil {
 		/// TODO LOG ERR
 	}
+	fmt.Println("debug pid", pid)
 	pubKey, ok := checkPubKeys(hp.Hash, hp.Nonce)
 	if !ok {
 		// log that pubkey doesn't exist
 		return
 	}
+	fmt.Println("debug pubKey, ok", pubKey, ok)
 	s, err := StartStream(context.Background(), pid)
 	if err != nil {
 		// TODO HANDLE

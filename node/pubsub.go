@@ -51,7 +51,6 @@ func handleSubscription(sNa *subNAlert) {
 	fmt.Println("debug handleSubscription", sNa)
 	for {
 		msg, err := sNa.s.Next(context.Background())
-		fmt.Println("debug readSubs:", msg, err)
 		b, err := json.Marshal(msg)
 		if err != nil {
 			//LogError.Println("handleSubscription:", err)

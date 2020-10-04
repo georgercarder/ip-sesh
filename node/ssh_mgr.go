@@ -25,9 +25,12 @@ type SSHMgr struct {
 }
 
 func (s *SSHMgr) DumpPubKeys() (pks []*ed25519.PublicKey) {
-	s.RLock()
+	s.Lock()
 	defer s.Unlock()
-	return s.pubKeys
+	for _, pk := range s.pubKeys {
+		pks = append(pks, pk)
+	}
+	return
 }
 
 func (s *SSHMgr) IsAuthorized(pk *ed25519.PublicKey) (tf bool) {

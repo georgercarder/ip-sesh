@@ -65,11 +65,10 @@ func (d *DomNameMgr) serveDomain(domainName string) {
 }
 
 func handleDomAlerts(dn *DomName) {
-	name := dn.name
+	//name := dn.name
 	for {
 		a := <-dn.alert
 		go checkAndRespondToAlert(a.([]byte))
-		fmt.Println("debug handleDomAlerts", name, a)
 	}
 }
 
