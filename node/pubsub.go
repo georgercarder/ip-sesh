@@ -53,7 +53,7 @@ func handleSubscription(sNa *subNAlert) {
 			continue
 		}
 		b = b
-		//go G_Alerts().SendAlert(sNa.alertName, string(b)) // FIXME
+		//go alerts.G_Alerts().SendAlert(sNa.alertName, string(b)) // FIXME
 		// TODO the reaction to this alert will initiate handshake
 	}
 }
@@ -86,7 +86,7 @@ func Subscribe(topic string) (err error) {
 		return
 	}
 	sNa := &subNAlert{s: sub,
-		alertName: PubSub_A + "TODO" /*g_pubsub_subscrs_A*/} // TODO
+		alertName: "TODO" /*g_pubsub_subscrs_A*/} // TODO
 	G_pubSub().M[topic] = sNa
 	go handleSubscription(sNa)
 	return
