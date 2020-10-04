@@ -37,8 +37,8 @@ func newIpfsNode() (n interface{}) { // *IpfsNode
 		Online:                      true,
 		DisableEncryptedConnections: false,
 		ExtraOpts: map[string]bool{
-			"mplex": true,
-			//"pubsub": true,
+			"mplex":  true,
+			"pubsub": true,
 		},
 
 		Routing: libp2p.DHTClientOption,

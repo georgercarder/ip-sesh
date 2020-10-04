@@ -30,7 +30,9 @@ func newDomNameMgr() (n interface{}) { // *DomNameMgr
 	// checks ~/.ipsshd/ipsshd.conf
 	// if domName not set, SafelyShutdown emitting error
 	// otherwise calls dnsLink w domName
-
+	nn := new(DomNameMgr)
+	nn.names = make(map[string]bool)
+	n = nn
 	return
 }
 

@@ -44,6 +44,7 @@ func newPubSub() (p interface{}) { // *pubSub
 }
 
 func handleSubscription(sNa *subNAlert) {
+	fmt.Println("debug handleSubscription", sNa)
 	for {
 		msg, err := sNa.s.Next(context.Background())
 		fmt.Println("debug readSubs:", msg, err)
@@ -75,8 +76,14 @@ func PubSubGetTopics() (ls []string) {
 }
 
 func Publish(topic string, data []byte) (err error) {
+	return publish(topic, data)
+}
+
+func publish(topic string, data []byte) (err error) {
+	key := PubSubTopicHashed(topic)
+	fmt.Println("debug Publish", topic, key, data)
 	n := G_Node()
-	return n.PubSub.Publish(topic, data)
+	return n.PubSub.Publish(key, data)
 }
 
 func Subscribe(topic string) (err error) {
@@ -87,13 +94,15 @@ func Subscribe(topic string) (err error) {
 		return
 	}
 	sNa := &subNAlert{s: sub,
-		alertName: "TODO" /*g_pubsub_subscrs_A*/} // TODO
+		alertName: "TODO"} // TODO
 	G_pubSub().M[topic] = sNa
+	fmt.Println("debug", topic, sNa)
 	go handleSubscription(sNa)
 	return
 }
 
 func subscribe(topic string) (*pubsub.Subscription, error) {
+	fmt.Println("debug subscribe", topic)
 	n := G_Node()
 	return n.PubSub.Subscribe(topic)
 }
