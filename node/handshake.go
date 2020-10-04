@@ -5,11 +5,56 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
+
+	"github.com/georgercarder/same"
 
 	"github.com/libp2p/go-libp2p-core/peer"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
+
+var G_HandshakeMgr = newHandshakeMgr() // TODO USE MODINIT
+
+func newHandshakeMgr() (h *HandshakeMgr) {
+	h = new(HandshakeMgr)
+	h.DomainName2Handshake = make(map[string]*Handshake)
+	return
+}
+
+type HandshakeMgr struct {
+	sync.RWMutex
+	DomainName2Handshake map[string]*Handshake
+}
+
+func (m *HandshakeMgr) newHandshake(domainName string) {
+	m.Lock()
+	defer m.Unlock()
+	hs := new(Handshake)
+	hs.StopChnl = make(chan bool)
+	m.DomainName2Handshake[domainName] = hs
+}
+
+func (m *HandshakeMgr) SendStop(domainName string) {
+	fmt.Println("debug SendStop", domainName)
+	if m.DomainName2Handshake[domainName] != nil {
+		fmt.Println("debug SendStop")
+		stop := true
+		m.DomainName2Handshake[domainName].StopChnl <- stop
+	}
+}
+
+func (m *HandshakeMgr) Stop(domainName string) <-chan bool {
+	m.Lock()
+	hs := m.DomainName2Handshake[domainName]
+	m.Unlock()
+	return hs.StopChnl
+}
+
+type Handshake struct {
+	DomainName string
+	StopChnl   (chan bool)
+}
 
 // TODO
 
@@ -24,6 +69,8 @@ func StartHandshake(domainName string) {
 	hp := &HandshakePacket{DomainName: domainName,
 		Nonce: nonce, Hash: hash}
 	// TODO register w Handshake_Mgr
+	G_HandshakeMgr.newHandshake(domainName)
+	hp = hp
 	go publishUntilChallenge(hp)
 }
 
@@ -59,23 +106,26 @@ func publishUntilChallenge(hp *HandshakePacket) {
 			time.Sleep(publishInterval)
 		}
 	}()
+	stopper := G_HandshakeMgr.Stop(hp.DomainName)
+	fmt.Println("debug stopper", stopper)
 	for {
 		select {
 		case <-pubCH:
 			Publish(hp.DomainName, hp.Bytes())
-			/*case <-G_Handshake_Mgr.Stop(hp.DomainName):
-			return*/ // TODO
+		case <-stopper:
+			return
 		}
 	}
 }
 
 // 3. respond to challenge
-
+// put this in
+//G_HandshakeMgr.SendStop(domainName)
 // server
 
 // 2. from alert, scan pubKeys w nonce, compare to H,
 //    if has pubKey, send challenge to client
-func checkAndRespondToAlert(a []byte) {
+func checkAndRespondToAlert(domainName string, a []byte) {
 	m := new(pubsub.Message)
 	err := json.Unmarshal(a, &m)
 	if err != nil {
@@ -85,6 +135,11 @@ func checkAndRespondToAlert(a []byte) {
 	err = json.Unmarshal(m.Data, &hp)
 	if err != nil {
 		// TODO LOG ERR
+	}
+	if !same.Same(domainName, hp.DomainName) {
+		// LOG
+		// means client is trying to cheat
+		return
 	}
 	pid, err := peer.IDFromBytes(m.From)
 	if err != nil {
