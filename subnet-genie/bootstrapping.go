@@ -69,7 +69,6 @@ func JoinProviders(n *core.IpfsNode) {
 			context.Background(), 10*time.Second)
 		defer cancel()
 		pchan := n.DHT.FindProvidersAsync(ctx, key, numProvs)
-		numProvs *= 2
 		ct := 0
 		for ct < numProvs { // TODO PUT IN TIMEOUT
 			ct++
@@ -90,5 +89,6 @@ func JoinProviders(n *core.IpfsNode) {
 				foundOne = true // this is janky FIXME
 			}(p)
 		}
+		numProvs *= 2
 	}
 }
