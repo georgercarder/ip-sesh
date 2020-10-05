@@ -9,6 +9,8 @@ import (
 	mi "github.com/georgercarder/mod_init"
 )
 
+// TODO discovery
+
 func G_DomNameMgr() (m *DomNameMgr) {
 	mm, err := modInitializerDomNameMgr.Get()
 	if err != nil {
