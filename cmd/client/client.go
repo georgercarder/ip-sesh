@@ -63,13 +63,13 @@ func joinProviders() {
 	}
 	numProvs := 1
 	foundOne := false
-	for !foundOne {
+	for !foundOne && numProvs < 1024 {
 		ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
 		defer cancel()
 		pchan := n.DHT.FindProvidersAsync(ctx, key, numProvs)
 		numProvs *= 2 
 		ct := 0
-		for ct < 100 {// TODO PUT IN TIMEOUT
+		for ct < numProvs {// TODO PUT IN TIMEOUT
 			ct++
 			p := <-pchan
 			//fmt.Println("debug Provider found", p)
