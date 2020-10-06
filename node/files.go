@@ -1,12 +1,12 @@
 package node
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
+	fp "path/filepath"
 	"strconv"
 	"strings"
-	fp "path/filepath"
+	"time"
 
 	"github.com/nightlyone/lockfile"
 )
@@ -18,13 +18,11 @@ func FileExists(path string) bool {
 	return err == nil || !os.IsNotExist(err)
 }
 
-// TODO TEST LOCK SETUP
 func SafeFileWrite(path string, data []byte) (err error) {
 	path, err = overwriteProofPath(path)
 	if err != nil {
 		return
 	}
-	fmt.Println("debug path", path)
 	absPath, err := fp.Abs(path)
 	if err != nil {
 		// LOG ERR
@@ -35,15 +33,18 @@ func SafeFileWrite(path string, data []byte) (err error) {
 		// LOG ERR
 		return
 	}
-	err = lf.TryLock()
+	err = TryLock(lf)
+	/* From the docs:
+	   TryLock tries to own the lock. It Returns nil, if successful and
+	   and error describing the reason, it didn't work out. Please note,
+	   that existing lockfiles containing pids of dead processes and
+	   lockfiles containing no pid at all are simply deleted.
+	*/
 	if err != nil {
 		// LOG ERR
 		return
 	}
-	defer func() {
-		err = lf.Unlock()
-	}()
-	err = ioutil.WriteFile(path, data, 0644)
+	err = ioutil.WriteFile(absPath, data, 0644)
 	if err != nil {
 		// TODO Log
 		return
@@ -51,7 +52,6 @@ func SafeFileWrite(path string, data []byte) (err error) {
 	return
 }
 
-// TODO TEST
 func overwriteProofPath(path string) (updatedPath string, err error) {
 	if !FileExists(path) {
 		updatedPath = path
@@ -74,7 +74,6 @@ func overwriteProofPath(path string) (updatedPath string, err error) {
 	return overwriteProofPath(newFilename)
 }
 
-// TODO TEST LOCK
 func SafeFileRead(path string) (data []byte, err error) {
 	absPath, err := fp.Abs(path)
 	if err != nil {
@@ -86,18 +85,37 @@ func SafeFileRead(path string) (data []byte, err error) {
 		// LOG ERR
 		return
 	}
-	err = lf.TryLock()
+	err = TryLock(lf)
+	/* From the docs:
+	   TryLock tries to own the lock. It Returns nil, if successful and
+	   and error describing the reason, it didn't work out. Please note,
+	   that existing lockfiles containing pids of dead processes and
+	   lockfiles containing no pid at all are simply deleted.
+	*/
 	if err != nil {
 		// LOG ERR
 		return
 	}
-	defer func() {
-		err = lf.Unlock()
-	}()
 	data, err = ioutil.ReadFile(absPath)
 	if err != nil {
 		// LOG
 		return
+	}
+	return
+}
+
+func TryLock(lf lockfile.Lockfile) (err error) {
+	maxTries := 1000
+	sleepInterval := 10 * time.Millisecond
+	// 10 seconds worth of tries
+	numTries := 0
+	for numTries < maxTries {
+		err = lf.TryLock()
+		if err == nil {
+			return
+		}
+		time.Sleep(sleepInterval)
+		numTries++
 	}
 	return
 }
