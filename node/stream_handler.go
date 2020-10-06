@@ -40,7 +40,7 @@ func handleStream(s network.Stream) (err error) {
 		return shellFrame(s)
 	}
 	return fmt.Errorf("handleStream: "+
-		"StreamStatus not supported.", ss[0])
+		"StreamStatus not supported. %d", ss[0])
 }
 
 // TODO DELETE but currently keeping for reference during dev
@@ -91,7 +91,7 @@ func shellFrame(s network.Stream) (err error) {
 	ok := g_activeSessions.Check(s.Conn().RemotePeer())
 	if !ok {
 		err = fmt.Errorf("shellFrame: "+
-			"not an active session.",
+			"not an active session. %q",
 			s.Conn().RemotePeer())
 		return sendBackToClient(s, Error, nil)
 	}
