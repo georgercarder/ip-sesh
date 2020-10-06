@@ -1,10 +1,12 @@
 package node
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+	fp "path/filepath"
 
 	"github.com/nightlyone/lockfile"
 )
@@ -22,7 +24,13 @@ func SafeFileWrite(path string, data []byte) (err error) {
 	if err != nil {
 		return
 	}
-	lf, err := lockfile.New(path)
+	fmt.Println("debug path", path)
+	absPath, err := fp.Abs(path)
+	if err != nil {
+		// LOG ERR
+		return
+	}
+	lf, err := lockfile.New(absPath)
 	if err != nil {
 		// LOG ERR
 		return
@@ -58,6 +66,7 @@ func overwriteProofPath(path string) (updatedPath string, err error) {
 	idx, err := strconv.Atoi(lastToken)
 	if err == nil { // lastToken was int
 		i_idx = idx + 1
+		fnSplit = fnSplit[:len(fnSplit)-1]
 	}
 	sIdx := strconv.Itoa(i_idx)
 	fnSplit = append(fnSplit, sIdx)
@@ -67,7 +76,12 @@ func overwriteProofPath(path string) (updatedPath string, err error) {
 
 // TODO TEST LOCK
 func SafeFileRead(path string) (data []byte, err error) {
-	lf, err := lockfile.New(path)
+	absPath, err := fp.Abs(path)
+	if err != nil {
+		// LOG ERR
+		return
+	}
+	lf, err := lockfile.New(absPath)
 	if err != nil {
 		// LOG ERR
 		return
@@ -80,7 +94,7 @@ func SafeFileRead(path string) (data []byte, err error) {
 	defer func() {
 		err = lf.Unlock()
 	}()
-	data, err = ioutil.ReadFile(path)
+	data, err = ioutil.ReadFile(absPath)
 	if err != nil {
 		// LOG
 		return
