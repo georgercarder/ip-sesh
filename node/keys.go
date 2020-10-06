@@ -25,7 +25,8 @@ func GenerateAndSaveKeypair(filename string) (err error) {
 	pubPath := FSJoin(SESH_Path, filename+".pub")
 	err = SafeFileWrite(pubPath, Key2Slice(pub))
 	if err != nil {
-
+		// TODO LOG
+		return
 	}
 	err = G_SSHMgr().ImportKeypair(priv, pub)
 	if err != nil {
