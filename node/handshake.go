@@ -68,9 +68,7 @@ func StartHandshake(domainName string) {
 	hash := Hash(PubKey2Slice(pubKey), nonce)
 	hp := &HandshakePacket{DomainName: domainName,
 		Nonce: nonce, Hash: hash}
-	// TODO register w Handshake_Mgr
 	G_HandshakeMgr.newHandshake(domainName)
-	hp = hp
 	go publishUntilChallenge(hp)
 }
 
