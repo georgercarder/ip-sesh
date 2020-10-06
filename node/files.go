@@ -116,3 +116,32 @@ func TryLock(lf lockfile.Lockfile) (err error) {
 	}
 	return
 }
+
+func FSJoin(folders ...string) (res string) {
+	for i := 0; i < len(folders); i++ {
+		res = fsJoin(res, folders[i])
+	}
+	return
+}
+
+func fsJoin(dir, subpath string) string {
+	if IsFullPath(subpath) {
+		return subpath
+	}
+	return fp.Join(dir, subpath)
+}
+
+func IsFullPath(path string) bool {
+	l := len(path)
+	if l == 0 {
+		return false
+	}
+	if path[0] == '/' || path[0] == '\\' {
+		return true
+	}
+	if l >= 2 && path[1] == ':' {
+		// Windows
+		return true
+	}
+	return false
+}

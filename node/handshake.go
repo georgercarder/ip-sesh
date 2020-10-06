@@ -65,7 +65,7 @@ type Handshake struct {
 func StartHandshake(domainName string) {
 	pubKey := getPubKey(domainName) // in ssh_mgr
 	nonce := genNonce()             // in crypto
-	hash := Hash(PubKey2Slice(pubKey), nonce)
+	hash := Hash(Key2Slice(pubKey), nonce)
 	hp := &HandshakePacket{DomainName: domainName,
 		Nonce: nonce, Hash: hash}
 	G_HandshakeMgr.newHandshake(domainName)

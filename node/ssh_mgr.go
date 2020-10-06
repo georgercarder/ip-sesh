@@ -36,14 +36,29 @@ func newSSHMgr() (s interface{}) { //*SSHMgr
 type SSHMgr struct {
 	sync.RWMutex
 	// TODO
-	pubKeys []*ed25519.PublicKey
+	privKeys map[string]bool
+	pubKeys  map[string]bool
+}
+
+func (s *SSHMgr) ImportKeypair(
+	priv ed25519.PrivateKey, pub ed25519.PublicKey) (err error) {
+	s.Lock()
+	defer s.Unlock()
+	if priv == nil || pub == nil {
+		err = fmt.Errorf("*SSHMgr: keypair must be non-nil.")
+		return
+	}
+	s.privKeys[Key2String(priv)] = true
+	s.pubKeys[Key2String(pub)] = true
+	return
 }
 
 func (s *SSHMgr) DumpPubKeys() (pks []*ed25519.PublicKey) {
 	s.Lock()
 	defer s.Unlock()
-	for _, pk := range s.pubKeys {
-		pks = append(pks, pk)
+	for s, _ := range s.pubKeys {
+		pk := String2PubKey(s)
+		pks = append(pks, &pk)
 	}
 	return
 }
@@ -63,7 +78,7 @@ func checkPubKeys(
 	pks := G_SSHMgr().DumpPubKeys()
 	// TODO PUT IN THREADS
 	for _, pk := range pks {
-		if same.Same(hash, Hash(PubKey2Slice(pk), nonce)) {
+		if same.Same(hash, Hash(Key2Slice(pk), nonce)) {
 			pubKey = pk
 			ok = true
 		}
