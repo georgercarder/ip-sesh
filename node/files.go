@@ -45,6 +45,7 @@ func SafeFileWrite(path string, data []byte) (err error) {
 		return
 	}
 	err = ioutil.WriteFile(absPath, data, 0644)
+	// this frees the lock
 	if err != nil {
 		// TODO Log
 		return
@@ -97,6 +98,7 @@ func SafeFileRead(path string) (data []byte, err error) {
 		return
 	}
 	data, err = ioutil.ReadFile(absPath)
+	// this frees the lock
 	if err != nil {
 		// LOG
 		return
