@@ -34,12 +34,6 @@ func SafeFileWrite(path string, data []byte) (err error) {
 		return
 	}
 	err = TryLock(lf)
-	/* From the docs:
-	   TryLock tries to own the lock. It Returns nil, if successful and
-	   and error describing the reason, it didn't work out. Please note,
-	   that existing lockfiles containing pids of dead processes and
-	   lockfiles containing no pid at all are simply deleted.
-	*/
 	if err != nil {
 		// LOG ERR
 		return
@@ -87,12 +81,6 @@ func SafeFileRead(path string) (data []byte, err error) {
 		return
 	}
 	err = TryLock(lf)
-	/* From the docs:
-	   TryLock tries to own the lock. It Returns nil, if successful and
-	   and error describing the reason, it didn't work out. Please note,
-	   that existing lockfiles containing pids of dead processes and
-	   lockfiles containing no pid at all are simply deleted.
-	*/
 	if err != nil {
 		// LOG ERR
 		return
@@ -113,6 +101,13 @@ func TryLock(lf lockfile.Lockfile) (err error) {
 	numTries := 0
 	for numTries < maxTries {
 		err = lf.TryLock()
+		/* From the docs:
+		   TryLock tries to own the lock. It Returns nil, if successful
+		   and error describing the reason, it didn't work out. Please
+		   note, that existing lockfiles containing pids of dead
+		   processes and lockfiles containing no pid at all are simply
+		   deleted.
+		*/
 		if err == nil {
 			return
 		}
