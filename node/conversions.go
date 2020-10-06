@@ -22,11 +22,36 @@ func String2CID(key string) (c cid.Cid, err error) {
 	return
 }
 
-func PubKey2Slice(pk *ed25519.PublicKey) (b []byte) {
-	if pk == nil {
-		// TODO LOG
+func Key2Slice(k interface{}) (b []byte) {
+	switch k.(type) {
+	case *ed25519.PublicKey:
+		kk := k.(*ed25519.PublicKey)
+		if kk == nil {
+			// TODO LOG
+			return
+		}
+		b = []byte(*kk)
+		return
+	case *ed25519.PrivateKey:
+		kk := k.(*ed25519.PrivateKey)
+		if kk == nil {
+			// TODO LOG
+			return
+		}
+		b = []byte(*kk)
 		return
 	}
-	b = []byte(*pk)
+	return
+}
+
+func Key2String(k interface{}) (s string) {
+	b := Key2Slice(k)
+	s = string(b)
+	return
+}
+
+func String2PubKey(s string) (pk ed25519.PublicKey) {
+	b := []byte(s)
+	pk = (ed25519.PublicKey)(b)
 	return
 }
