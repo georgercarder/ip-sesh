@@ -6,7 +6,7 @@ import (
 
 // TODO need consts.go
 
-const Home_Dir = "~/"
+const Home_Dir = "~/" // specific to Linux. does not support Windows
 
 var SESH_Path = FSJoin(Home_Dir, ".sesh")
 
