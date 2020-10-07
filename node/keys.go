@@ -26,6 +26,16 @@ func SESH_Path() (sp string, err error) {
 	return
 }
 
+func SESH_Config_Path() (cp string, err error) {
+	sp, err := SESH_Path()
+	if err != nil {
+		// TODO LOG
+		return
+	}
+	cp = FSJoin(sp, "sesh.config")
+	return
+}
+
 func GenerateAndSaveKeypair(filename string) (err error) {
 	pub, priv, err := ed25519.GenerateKey(nil)
 	// nil setting defaults to crypto/rand
