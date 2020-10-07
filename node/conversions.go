@@ -32,6 +32,10 @@ func Key2Slice(k interface{}) (b []byte) {
 		}
 		b = []byte(*kk)
 		return
+	case ed25519.PublicKey:
+		kk := k.(ed25519.PublicKey)
+		b = []byte(kk)
+		return
 	case *ed25519.PrivateKey:
 		kk := k.(*ed25519.PrivateKey)
 		if kk == nil {
@@ -39,6 +43,10 @@ func Key2Slice(k interface{}) (b []byte) {
 			return
 		}
 		b = []byte(*kk)
+		return
+	case ed25519.PrivateKey:
+		kk := k.(ed25519.PrivateKey)
+		b = []byte(kk)
 		return
 	}
 	return
