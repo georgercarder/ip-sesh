@@ -4,7 +4,6 @@ import (
 	"crypto/ed25519"
 	"fmt"
 
-	//	"io/ioutil"
 	"strconv"
 	"strings"
 	"sync"
@@ -38,13 +37,13 @@ func newSSHMgr() (s interface{}) { //*SSHMgr
 
 func newDomains() (d *domains) {
 	d = new(domains)
-	d.DomainName2PubKeys = make(map[string]*keys)
+	d.DomainName2PrivKeys = make(map[string]*keys)
 	return
 }
 
 func newAuthorized() (a *authorized) {
 	a = new(authorized)
-	a.DomainName2PrivKeys = make(map[string]*keys)
+	a.DomainName2PubKeys = make(map[string]*keys)
 	return
 }
 
@@ -55,11 +54,17 @@ type SSHMgr struct {
 }
 
 type domains struct {
-	DomainName2PubKeys map[string]*keys
+	DomainName2PrivKeys map[string]*keys
 }
 
 type authorized struct {
-	DomainName2PrivKeys map[string]*keys
+	DomainName2PubKeys map[string]*keys
+}
+
+func newKeys() (k *keys) {
+	k = new(keys)
+	k.M = make(map[string]bool)
+	return
 }
 
 type keys struct {
@@ -67,39 +72,31 @@ type keys struct {
 }
 
 func (s *SSHMgr) setCachedKeys() {
-	/*sesh_path, err := SESH_Path()
+	sesh_path, err := SESH_Path()
 	if err != nil {
 		// TODO LOG
 		return
 	}
-	files, err := ioutil.ReadDir(sesh_path)
-	if err != nil {
-		// TODO LOG ERR
-		return
-	}
-	// identify as pub, priv, conf
-	for _, f := range files {
-		id := identifyFile(f.Name())
-		if id == UNKNOWN {
-			continue
-		}
-		data, err := SafeFileRead(FSJoin(sesh_path, f.Name()))
+	cfg := G_ConfigMgr.Cfg
+	// client
+	for _, d := range cfg.Client.Domains {
+		data, err := SafeFileRead(FSJoin(sesh_path, d.Keyfile))
 		if err != nil {
 			// TODO LOG
 			return
 		}
-		switch id {
-		case PRIV:
-			s.ImportPrivKey(Slice2PrivKey(data))
-			break
-		case PUB:
-			s.ImportPubKey(Slice2PubKey(data))
-			break
-		case CONFIG:
-			// TODO
+		s.ImportPrivKey(d.Domain, Slice2PrivKey(data))
+	}
+	// server
+	for _, a := range cfg.Server.Authorized {
+		data, err := SafeFileRead(FSJoin(sesh_path, a.Keyfile))
+		if err != nil {
+			// TODO LOG
+			return
 		}
-	}*/
-	// set accordingly
+		s.ImportPubKey(a.Domain, Slice2PubKey(data))
+	}
+	return
 }
 
 type SESH_FILETYPE byte
@@ -133,42 +130,40 @@ func identifyFile(fname string) (ft SESH_FILETYPE) {
 	return // UNKNOWN
 }
 
-/*func (s *SSHMgr) ImportKeypair(
-	priv ed25519.PrivateKey, pub ed25519.PublicKey) (err error) {
-	err = s.ImportPubKey(pub)
-	if err != nil {
-		return
-	}
-
-	return s.ImportPrivKey(priv)
-}
-
-func (s *SSHMgr) ImportPubKey(pub ed25519.PublicKey) (err error) {
+func (s *SSHMgr) ImportPubKey(
+	domainName string, pub ed25519.PublicKey) (err error) {
 	s.Lock()
 	defer s.Unlock()
 	if pub == nil {
 		err = fmt.Errorf("*SSHMgr: key must be non-nil.")
 		return
 	}
-	s.pubKeys[Key2String(pub)] = true
+	if s.Authorized.DomainName2PubKeys[domainName] == nil {
+		s.Authorized.DomainName2PubKeys[domainName] = newKeys()
+	}
+	s.Authorized.DomainName2PubKeys[domainName].M[Key2String(pub)] = true
 	return
 }
 
-func (s *SSHMgr) ImportPrivKey(priv ed25519.PrivateKey) (err error) {
+func (s *SSHMgr) ImportPrivKey(
+	domainName string, priv ed25519.PrivateKey) (err error) {
 	s.Lock()
 	defer s.Unlock()
 	if priv == nil {
 		err = fmt.Errorf("*SSHMgr: key must be non-nil.")
 		return
 	}
-	s.privKeys[Key2String(priv)] = true
+	if s.Domains.DomainName2PrivKeys[domainName] == nil {
+		s.Domains.DomainName2PrivKeys[domainName] = newKeys()
+	}
+	s.Domains.DomainName2PrivKeys[domainName].M[Key2String(priv)] = true
 	return
-}*/
+}
 
 func (s *SSHMgr) DumpPubKeys(domainName string) (pks []*ed25519.PublicKey) {
 	s.Lock()
 	defer s.Unlock()
-	pubKeys := s.Domains.DomainName2PubKeys[domainName]
+	pubKeys := s.Authorized.DomainName2PubKeys[domainName]
 	for s, _ := range pubKeys.M {
 		pk := String2PubKey(s)
 		pks = append(pks, &pk)
