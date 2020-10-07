@@ -29,6 +29,8 @@ var modInitializerSSHMgr = mi.NewModInit(newSSHMgr,
 
 func newSSHMgr() (s interface{}) { //*SSHMgr
 	ss := new(SSHMgr)
+	ss.privKeys = make(map[string]bool)
+	ss.pubKeys = make(map[string]bool)
 	s = ss
 	return
 } // TODO PROPERLY INIT

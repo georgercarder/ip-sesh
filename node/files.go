@@ -21,26 +21,24 @@ func FileExists(path string) bool {
 }
 
 func SafeFileWrite(path string, data []byte) (err error) {
-	fmt.Println("SafeFileWrite start")
 	path, err = overwriteProofPath(path)
 	if err != nil {
 		return
 	}
-	fmt.Println("SafeFileWrite 0", path)
-	absPath, err := fp.Abs(path)
-	if err != nil {
-		// LOG ERR
-		return
-	}
-	lf, err := lockfile.New(absPath)
-	if err != nil {
-		// LOG ERR
-		return
-	}
-	fmt.Println("debug absPath", absPath)
-	err = TouchFile(absPath)
+	err = TouchFile(path)
 	if err != nil {
 		// TODO LOG
+		return
+	}
+	absPath, err := fp.Abs(path)
+	if err != nil {
+		// TODO LOG
+		return
+	}
+	path = absPath
+	lf, err := lockfile.New(path)
+	if err != nil {
+		// LOG ERR
 		return
 	}
 	err = TryLock(lf)
@@ -48,7 +46,7 @@ func SafeFileWrite(path string, data []byte) (err error) {
 		// LOG ERR
 		return
 	}
-	err = ioutil.WriteFile(absPath, data, 0644)
+	err = ioutil.WriteFile(path, data, 0644)
 	// this frees the lock
 	if err != nil {
 		// TODO Log
@@ -61,6 +59,10 @@ func overwriteProofPath(path string) (updatedPath string, err error) {
 	if !FileExists(path) {
 		updatedPath = path
 		return
+	}
+	hasSlash := false // like for /home/user . linux specific!
+	if []rune(path)[0] == []rune("/")[0] {
+		hasSlash = true
 	}
 	pathSplit := strings.Split(path, "/") // does not support windows yet
 	filename := pathSplit[len(pathSplit)-1]
@@ -76,7 +78,18 @@ func overwriteProofPath(path string) (updatedPath string, err error) {
 	sIdx := strconv.Itoa(i_idx)
 	fnSplit = append(fnSplit, sIdx)
 	newFilename := strings.Join(fnSplit, ".")
-	return overwriteProofPath(newFilename)
+	newPath := ""
+	if len(pathSplit) < 2 {
+		newPath = newFilename
+	} else {
+		pathSplit = pathSplit[:len(pathSplit)-1]
+		pathSplit = append(pathSplit, newFilename)
+		newPath = FSJoinSlice(pathSplit)
+		if hasSlash {
+			newPath = "/" + newPath
+		}
+	}
+	return overwriteProofPath(newPath)
 }
 
 func SafeFileRead(path string) (data []byte, err error) {
@@ -132,6 +145,13 @@ func TryLock(lf lockfile.Lockfile) (err error) {
 }
 
 func FSJoin(folders ...string) (res string) {
+	for i := 0; i < len(folders); i++ {
+		res = fsJoin(res, folders[i])
+	}
+	return
+}
+
+func FSJoinSlice(folders []string) (res string) {
 	for i := 0; i < len(folders); i++ {
 		res = fsJoin(res, folders[i])
 	}

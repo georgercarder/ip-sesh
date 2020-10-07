@@ -2,13 +2,31 @@ package node
 
 import (
 	"crypto/ed25519"
+	//"fmt"
+	"os/user"
 )
 
 // TODO need consts.go
 
-const Home_Dir = "~/" // specific to Linux. does not support Windows
+func Home_Dir() (hd string, err error) {
+	usr, err := user.Current()
+	if err != nil {
+		// TODO LOG
+		return
+	}
+	hd = usr.HomeDir
+	return
+} // specific to Linux. does not support Windows
 
-var SESH_Path = FSJoin(Home_Dir, ".sesh")
+func SESH_Path() (sp string, err error) {
+	hd, err := Home_Dir()
+	if err != nil {
+		// TODO LOG
+		return
+	}
+	sp = FSJoin(hd, ".sesh")
+	return
+}
 
 func GenerateAndSaveKeypair(filename string) (err error) {
 	pub, priv, err := ed25519.GenerateKey(nil)
@@ -17,12 +35,18 @@ func GenerateAndSaveKeypair(filename string) (err error) {
 		// TODO LOG
 		return
 	}
-	privPath := FSJoin(SESH_Path, filename)
+	sesh_path, err := SESH_Path()
+	if err != nil {
+		// TODO LOG
+		return
+	}
+	privPath := FSJoin(sesh_path, filename)
 	err = SafeFileWrite(privPath, Key2Slice(priv))
 	if err != nil {
-
+		// TODO LOG
+		return
 	}
-	pubPath := FSJoin(SESH_Path, filename+".pub")
+	pubPath := FSJoin(sesh_path, filename+".pub")
 	err = SafeFileWrite(pubPath, Key2Slice(pub))
 	if err != nil {
 		// TODO LOG
