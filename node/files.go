@@ -1,8 +1,10 @@
 package node
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	fp "path/filepath"
 	"strconv"
 	"strings"
@@ -19,10 +21,12 @@ func FileExists(path string) bool {
 }
 
 func SafeFileWrite(path string, data []byte) (err error) {
+	fmt.Println("SafeFileWrite start")
 	path, err = overwriteProofPath(path)
 	if err != nil {
 		return
 	}
+	fmt.Println("SafeFileWrite 0", path)
 	absPath, err := fp.Abs(path)
 	if err != nil {
 		// LOG ERR
@@ -31,6 +35,12 @@ func SafeFileWrite(path string, data []byte) (err error) {
 	lf, err := lockfile.New(absPath)
 	if err != nil {
 		// LOG ERR
+		return
+	}
+	fmt.Println("debug absPath", absPath)
+	err = TouchFile(absPath)
+	if err != nil {
+		// TODO LOG
 		return
 	}
 	err = TryLock(lf)
@@ -78,6 +88,10 @@ func SafeFileRead(path string) (data []byte, err error) {
 	lf, err := lockfile.New(absPath)
 	if err != nil {
 		// LOG ERR
+		return
+	}
+	if !FileExists(absPath) {
+		err = fmt.Errorf("SafeFileRead: File does not exist.")
 		return
 	}
 	err = TryLock(lf)
@@ -144,4 +158,25 @@ func IsFullPath(path string) bool {
 		return true
 	}
 	return false
+}
+
+func CreateFile(fullPath string) (*os.File, error) {
+	err := os.MkdirAll(filepath.Dir(fullPath), os.ModeDir|os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.Create(fullPath)
+	return file, err
+}
+
+func TouchFile(absPath string) (err error) {
+	if !FileExists(absPath) {
+		_, err = CreateFile(absPath)
+		if err != nil {
+			// TODO LOG
+			return
+		}
+	}
+	return
 }
