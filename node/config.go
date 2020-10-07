@@ -25,9 +25,16 @@ func newConfigMgr() (c *configMgr) {
 		}
 		err = json.Unmarshal(data, &cc.Cfg)
 	} else {
-		sampleDNF := &DomainNKeyfile{Domain: "example.com",
+		cc.Cfg.Client = new(Client)
+		sampleDomain := &DomainNKeyfile{Domain: "example.com",
 			Keyfile: "example.pub"}
-		cc.Cfg.Domains = append(cc.Cfg.Domains, sampleDNF)
+		cc.Cfg.Client.Domains = append(cc.Cfg.Client.Domains,
+			sampleDomain)
+		cc.Cfg.Server = new(Server)
+		sampleAuthorized := &DomainNKeyfile{Domain: "example2.com",
+			Keyfile: "example2.pub"}
+		cc.Cfg.Server.Authorized = append(cc.Cfg.Server.Authorized,
+			sampleAuthorized)
 		SaveConfig(cc.Cfg) // puts a template for user to fill out
 	}
 	c = cc
@@ -40,9 +47,18 @@ type configMgr struct {
 }
 
 type Config struct {
-	Domains []*DomainNKeyfile `json:"domains"`
+	Client *Client `json:"client"`
+	Server *Server `json:"server"`
 	// TODO eventually specify user. But for now session
 	// has root privileges.
+}
+
+type Client struct {
+	Domains []*DomainNKeyfile `json:"domains"`
+}
+
+type Server struct {
+	Authorized []*DomainNKeyfile `json:"authorized"`
 }
 
 type DomainNKeyfile struct {
