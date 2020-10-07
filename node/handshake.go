@@ -144,7 +144,7 @@ func checkAndRespondToAlert(domainName string, a []byte) {
 		/// TODO LOG ERR
 	}
 	fmt.Println("debug pid", pid)
-	pubKey, ok := checkPubKeys(hp.Hash, hp.Nonce)
+	pubKey, ok := checkPubKeys(domainName, hp.Hash, hp.Nonce)
 	if !ok {
 		// log that pubkey doesn't exist
 		return

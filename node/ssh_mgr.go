@@ -3,7 +3,8 @@ package node
 import (
 	"crypto/ed25519"
 	"fmt"
-	"io/ioutil"
+
+	//	"io/ioutil"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,21 +29,45 @@ var modInitializerSSHMgr = mi.NewModInit(newSSHMgr,
 
 func newSSHMgr() (s interface{}) { //*SSHMgr
 	ss := new(SSHMgr)
-	ss.privKeys = make(map[string]bool)
-	ss.pubKeys = make(map[string]bool)
+	ss.Domains = newDomains()
+	ss.Authorized = newAuthorized()
 	ss.setCachedKeys()
 	s = ss
 	return
 } // TODO PROPERLY INIT
 
+func newDomains() (d *domains) {
+	d = new(domains)
+	d.DomainName2PubKeys = make(map[string]*keys)
+	return
+}
+
+func newAuthorized() (a *authorized) {
+	a = new(authorized)
+	a.DomainName2PrivKeys = make(map[string]*keys)
+	return
+}
+
 type SSHMgr struct {
 	sync.RWMutex
-	privKeys map[string]bool
-	pubKeys  map[string]bool
+	Domains    *domains
+	Authorized *authorized
+}
+
+type domains struct {
+	DomainName2PubKeys map[string]*keys
+}
+
+type authorized struct {
+	DomainName2PrivKeys map[string]*keys
+}
+
+type keys struct {
+	M map[string]bool
 }
 
 func (s *SSHMgr) setCachedKeys() {
-	sesh_path, err := SESH_Path()
+	/*sesh_path, err := SESH_Path()
 	if err != nil {
 		// TODO LOG
 		return
@@ -73,7 +98,7 @@ func (s *SSHMgr) setCachedKeys() {
 		case CONFIG:
 			// TODO
 		}
-	}
+	}*/
 	// set accordingly
 }
 
@@ -108,7 +133,7 @@ func identifyFile(fname string) (ft SESH_FILETYPE) {
 	return // UNKNOWN
 }
 
-func (s *SSHMgr) ImportKeypair(
+/*func (s *SSHMgr) ImportKeypair(
 	priv ed25519.PrivateKey, pub ed25519.PublicKey) (err error) {
 	err = s.ImportPubKey(pub)
 	if err != nil {
@@ -138,12 +163,13 @@ func (s *SSHMgr) ImportPrivKey(priv ed25519.PrivateKey) (err error) {
 	}
 	s.privKeys[Key2String(priv)] = true
 	return
-}
+}*/
 
-func (s *SSHMgr) DumpPubKeys() (pks []*ed25519.PublicKey) {
+func (s *SSHMgr) DumpPubKeys(domainName string) (pks []*ed25519.PublicKey) {
 	s.Lock()
 	defer s.Unlock()
-	for s, _ := range s.pubKeys {
+	pubKeys := s.Domains.DomainName2PubKeys[domainName]
+	for s, _ := range pubKeys.M {
 		pk := String2PubKey(s)
 		pks = append(pks, &pk)
 	}
@@ -160,9 +186,9 @@ func getPubKey(domainName string) (pk *ed25519.PublicKey) {
 	return
 }
 
-func checkPubKeys(
-	hash []byte, nonce []byte) (pubKey *ed25519.PublicKey, ok bool) {
-	pks := G_SSHMgr().DumpPubKeys()
+func checkPubKeys(domainName string,
+	hash, nonce []byte) (pubKey *ed25519.PublicKey, ok bool) {
+	pks := G_SSHMgr().DumpPubKeys(domainName)
 	// TODO PUT IN THREADS
 	for _, pk := range pks {
 		if same.Same(hash, Hash(Key2Slice(pk), nonce)) {

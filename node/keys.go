@@ -60,9 +60,5 @@ func GenerateAndSaveKeypair(filename string) (err error) {
 		// TODO LOG
 		return
 	}
-	err = G_SSHMgr().ImportKeypair(priv, pub)
-	if err != nil {
-		// TODO LOG
-	}
 	return
 }
