@@ -89,7 +89,9 @@ func (s *SSHMgr) setCachedKeys() {
 	}
 	// server
 	for _, a := range cfg.Server.Authorized {
+		fmt.Println("debug setCachedKeys", a)
 		data, err := SafeFileRead(FSJoin(sesh_path, a.Keyfile))
+		fmt.Println("debug setCachedKeys", data, err)
 		if err != nil {
 			// TODO LOG
 			return
@@ -132,10 +134,16 @@ func identifyFile(fname string) (ft SESH_FILETYPE) {
 
 func (s *SSHMgr) ImportPubKey(
 	domainName string, pub ed25519.PublicKey) (err error) {
+	fmt.Println("debug *SSHMgr ImportPubKey", domainName, pub)
 	s.Lock()
 	defer s.Unlock()
 	if pub == nil {
 		err = fmt.Errorf("*SSHMgr: key must be non-nil.")
+		return
+	}
+	if !GoodPubKeyLen(pub) {
+		err = fmt.Errorf("*SSHMgr: priv key len not good. " +
+			"Check config.")
 		return
 	}
 	if s.Authorized.DomainName2PubKeys[domainName] == nil {
@@ -153,6 +161,11 @@ func (s *SSHMgr) ImportPrivKey(
 		err = fmt.Errorf("*SSHMgr: key must be non-nil.")
 		return
 	}
+	if !GoodPrivKeyLen(priv) {
+		err = fmt.Errorf("*SSHMgr: priv key len not good. " +
+			"Check config.")
+		return
+	}
 	if s.Domains.DomainName2PrivKeys[domainName] == nil {
 		s.Domains.DomainName2PrivKeys[domainName] = newKeys()
 	}
@@ -164,6 +177,11 @@ func (s *SSHMgr) DumpPubKeys(domainName string) (pks []*ed25519.PublicKey) {
 	s.Lock()
 	defer s.Unlock()
 	pubKeys := s.Authorized.DomainName2PubKeys[domainName]
+	if pubKeys == nil {
+		fmt.Println("debug *SSHMgr.DumpPubKeys pubKeys empty.",
+			domainName)
+		return
+	}
 	for s, _ := range pubKeys.M {
 		pk := String2PubKey(s)
 		pks = append(pks, &pk)
@@ -176,19 +194,44 @@ func (s *SSHMgr) IsAuthorized(pk *ed25519.PublicKey) (tf bool) {
 	return
 }
 
+// called during handshake by client
 func getPubKey(domainName string) (pk *ed25519.PublicKey) {
-	// TODO
+	mgr := G_SSHMgr()
+	pk = mgr.getPubKey(domainName)
+	return
+}
+
+func (s *SSHMgr) getPubKey(domainName string) (pk *ed25519.PublicKey) {
+	s.Lock()
+	defer s.Unlock()
+	privKeys := s.Domains.DomainName2PrivKeys[domainName]
+	if privKeys == nil {
+		// TODO LOG
+		return
+	}
+	for s, _ := range privKeys.M {
+		priv := String2PrivKey(s)
+		fmt.Println("debug getPubKey priv", priv)
+		pub := PubFromPriv(*priv)
+		pk = &pub
+		return
+	}
 	return
 }
 
 func checkPubKeys(domainName string,
 	hash, nonce []byte) (pubKey *ed25519.PublicKey, ok bool) {
+	fmt.Println("debug checkPubKeys", domainName, hash, nonce)
 	pks := G_SSHMgr().DumpPubKeys(domainName)
+	fmt.Println("debug pks", pks)
 	// TODO PUT IN THREADS
 	for _, pk := range pks {
+		fmt.Println("debug input", Key2Slice(pk), nonce)
+		fmt.Println("debug hash", hash, Hash(Key2Slice(pk), nonce))
 		if same.Same(hash, Hash(Key2Slice(pk), nonce)) {
 			pubKey = pk
 			ok = true
+			return
 		}
 	}
 	return

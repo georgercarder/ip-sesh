@@ -65,7 +65,10 @@ type Handshake struct {
 func StartHandshake(domainName string) {
 	pubKey := getPubKey(domainName) // in ssh_mgr
 	nonce := genNonce()             // in crypto
+	fmt.Println("debug pubKey", pubKey)
+	fmt.Println("debug input", Key2Slice(pubKey), nonce)
 	hash := Hash(Key2Slice(pubKey), nonce)
+	fmt.Println("debug hash", hash)
 	hp := &HandshakePacket{DomainName: domainName,
 		Nonce: nonce, Hash: hash}
 	G_HandshakeMgr.newHandshake(domainName)
@@ -117,6 +120,7 @@ func publishUntilChallenge(hp *HandshakePacket) {
 }
 
 // 3. respond to challenge
+// TODO
 // put this in
 //G_HandshakeMgr.SendStop(domainName)
 // server
@@ -158,3 +162,4 @@ func checkAndRespondToAlert(domainName string, a []byte) {
 }
 
 // 4. validate challenge response, put pid in active screens
+// TODO

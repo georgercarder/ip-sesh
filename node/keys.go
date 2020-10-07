@@ -62,3 +62,17 @@ func GenerateAndSaveKeypair(filename string) (err error) {
 	}
 	return
 }
+
+func GoodPubKeyLen(pk ed25519.PublicKey) (ok bool) {
+	if len([]byte(pk)) == ed25519.PublicKeySize {
+		ok = true
+	}
+	return
+}
+
+func GoodPrivKeyLen(pk ed25519.PrivateKey) (ok bool) {
+	if len([]byte(pk)) == ed25519.PrivateKeySize {
+		ok = true
+	}
+	return
+}
