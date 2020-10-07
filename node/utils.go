@@ -10,21 +10,15 @@ import (
 type StreamStatus byte
 
 const (
-	InitStream StreamStatus = iota
-	HandshakeInitPublicKeys
-	HandshakeInitChallenge
+	HandshakeInitChallenge StreamStatus = iota
 	HandshakeResponse
+	HandshakeResult
 	ShellFrame
 	Error
 )
 
 func (ss StreamStatus) Byte() (b byte) {
 	b = byte(ss)
-	return
-}
-
-func readIPSSHPubKey(s network.Stream) (pk *ed25519.PublicKey, err error) {
-	// TODO
 	return
 }
 
@@ -44,15 +38,15 @@ func (p *pendingHandshakes) Put(b []byte, pk *ed25519.PublicKey) {
 	return
 }
 
-func (p *pendingHandshakes) Check(b []byte) (ok bool) {
+func (p *pendingHandshakes) Check(hp *HandshakePacket) (ok bool) {
 	// TODO
 	// checks if ed25519 sig is valid
 
 	return
 }
 
-func checkAgainstPendingHandshakes(hsRes []byte) (ok bool) {
-	return g_pendingHandshakes.Check(hsRes)
+func checkAgainstPendingHandshakes(hp *HandshakePacket) (ok bool) {
+	return g_pendingHandshakes.Check(hp)
 }
 
 func sendBackToClient(
@@ -79,7 +73,12 @@ func Boole2Byte(b bool) (ret byte) {
 	return
 }
 
-func readHandshakeResponse(s network.Stream) (res []byte, err error) {
+func readHandshakePacket(s network.Stream) (hp *HandshakePacket, err error) {
+	// TODO
+	return
+}
+
+func readHandshakeResult(s network.Stream) (res bool, err error) {
 	// TODO
 	return
 }

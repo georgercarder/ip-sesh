@@ -123,6 +123,12 @@ func publishUntilChallenge(hp *HandshakePacket) {
 // TODO
 // put this in
 //G_HandshakeMgr.SendStop(domainName)
+func prepareChallengeResponse(
+	hp *HandshakePacket) (res *HandshakePacket, err error) {
+	// TODO
+	return
+}
+
 // server
 
 // 2. from alert, scan pubKeys w nonce, compare to H,
@@ -158,7 +164,7 @@ func checkAndRespondToAlert(domainName string, a []byte) {
 	if err != nil {
 		// TODO HANDLE
 	}
-	go sendChallenge(s, pubKey)
+	sendChallenge(s, pubKey)
 }
 
 // 4. validate challenge response, put pid in active screens

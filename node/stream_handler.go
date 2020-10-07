@@ -26,16 +26,12 @@ func handleStream(s network.Stream) (err error) {
 		return
 	}
 	switch StreamStatus(ss[0]) {
-	/*case InitStream:
-	return initStream(s)*/
-	case HandshakeInitPublicKeys:
-		// TODO
-		return nil
 	case HandshakeInitChallenge:
-		// TODO
-		return nil
+		return handleHandshakeInitChallenge(s)
 	case HandshakeResponse:
 		return checkHandshakeResponse(s)
+	case HandshakeResult:
+		return checkHandshakeResult(s)
 	case ShellFrame:
 		return shellFrame(s)
 	}
@@ -43,47 +39,55 @@ func handleStream(s network.Stream) (err error) {
 		"StreamStatus not supported. %d", ss[0])
 }
 
-// TODO DELETE but currently keeping for reference during dev
-/*func initStream(s network.Stream) (err error) {
-	pk, err := readIPSSHPubKey(s)
+// client
+
+// 2
+func handleHandshakeInitChallenge(s network.Stream) (err error) {
+	fmt.Println("debug handleHandshakeInitChallenge")
+	hp, err := readHandshakePacket(s)
 	if err != nil {
 		return
 	}
-	// note: this pk is to ipssh keyset which is
-	// different from ipfs node credentials.
-	// See main doc.
-	if !G_SSHMgr.IsAuthorized(pk) {
-		err = fmt.Errorf("handleStream: "+
-			"RemotePeer not authorized.",
-			s.Conn().RemotePeer().Pretty())
-		// LogError.Println(err)
+	response, err := prepareChallengeResponse(hp)
+	if err != nil {
 		return
 	}
-	return sendChallenge(s, pk)
+	return sendToStream(s, HandshakeResponse, response.Bytes())
 }
 
-func sendPublicKeys(s network.Stream, pks []*ed25519.PublicKey) (err error) {
-	b, err := json.Marshal(pks)
+// 4
+func checkHandshakeResult(s network.Stream) (err error) {
+	ok, err := readHandshakeResult(s)
 	if err != nil {
-		// TODO log
+		return
 	}
-	return sendBackToClient(s, HandshakeInitPublicKeys, b)
-}*/
+	if ok != true {
+		err = fmt.Errorf("checkHandshakeResult: " +
+			"Handshake result not ok.")
+	}
+	// TODO RUN SHELL SESSION
+	fmt.Println("debug run shell session here")
+	return
+}
 
+// server
+
+// 1
 func sendChallenge(s network.Stream, pk *ed25519.PublicKey) (err error) {
 	chlg := prepareChallenge()
 	hp := &HandshakePacket{Challenge: chlg, PubKey: pk}
 	return sendToStream(s, HandshakeInitChallenge, hp.Bytes())
 }
 
+// 3
 func checkHandshakeResponse(s network.Stream) (err error) {
-	hsRes, err := readHandshakeResponse(s)
+	hp, err := readHandshakePacket(s)
 	if err != nil {
 		return
 	}
-	ok := checkAgainstPendingHandshakes(hsRes)
+	ok := checkAgainstPendingHandshakes(hp)
 	g_activeSessions.Put(s.Conn().RemotePeer())
-	return sendBackToClient(s, HandshakeResponse,
+	return sendBackToClient(s, HandshakeResult,
 		[]byte{Boole2Byte(ok)})
 }
 
