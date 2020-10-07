@@ -36,7 +36,7 @@ func SafeFileWrite(path string, data []byte) (err error) {
 		return
 	}
 	path = absPath
-	lf, err := lockfile.New(path)
+	lf, err := lockfile.New(path + ".lock")
 	if err != nil {
 		// LOG ERR
 		return
@@ -46,6 +46,10 @@ func SafeFileWrite(path string, data []byte) (err error) {
 		// LOG ERR
 		return
 	}
+	defer func() {
+		err = lf.Unlock()
+		// TODO LOG ERR
+	}()
 	err = ioutil.WriteFile(path, data, 0644)
 	// this frees the lock
 	if err != nil {
@@ -98,7 +102,7 @@ func SafeFileRead(path string) (data []byte, err error) {
 		// LOG ERR
 		return
 	}
-	lf, err := lockfile.New(absPath)
+	lf, err := lockfile.New(absPath + ".lock")
 	if err != nil {
 		// LOG ERR
 		return
@@ -112,6 +116,10 @@ func SafeFileRead(path string) (data []byte, err error) {
 		// LOG ERR
 		return
 	}
+	defer func() {
+		err = lf.Unlock()
+		// TODO LOG ERR
+	}()
 	data, err = ioutil.ReadFile(absPath)
 	// this frees the lock
 	if err != nil {

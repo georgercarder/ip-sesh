@@ -16,6 +16,10 @@ import (
 )
 
 func main() {
+	/*err := nd.GenerateAndSaveKeypair("cats")
+	if err != nil {
+		fmt.Println("debug key err", err)
+	}*/
 	fmt.Println("debug client")
 	n := nd.G_Node()
 	numPeers := 0
