@@ -9,6 +9,8 @@ var G_ConfigMgr = newConfigMgr() // TODO use mod_init
 
 func newConfigMgr() (c *configMgr) {
 	cc := new(configMgr)
+	cc.Lock()
+	defer cc.Unlock()
 	cc.Cfg = new(Config)
 	sesh_config_path, err := SESH_Config_Path()
 	if err != nil {
@@ -23,6 +25,9 @@ func newConfigMgr() (c *configMgr) {
 		}
 		err = json.Unmarshal(data, &cc.Cfg)
 	} else {
+		sampleDNF := &DomainNKeyfile{Domain: "example.com",
+			Keyfile: "example.pub"}
+		cc.Cfg.Domains = append(cc.Cfg.Domains, sampleDNF)
 		SaveConfig(cc.Cfg) // puts a template for user to fill out
 	}
 	c = cc
@@ -35,7 +40,14 @@ type configMgr struct {
 }
 
 type Config struct {
-	Todo string `json:"todo"` // TODO
+	Domains []*DomainNKeyfile `json:"domains"`
+	// TODO eventually specify user. But for now session
+	// has root privileges.
+}
+
+type DomainNKeyfile struct {
+	Domain  string `json:"domain"`
+	Keyfile string `json:"keyfile"`
 }
 
 func SaveConfig(conf interface{}) (err error) {
