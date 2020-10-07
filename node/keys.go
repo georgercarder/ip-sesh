@@ -6,8 +6,6 @@ import (
 	"os/user"
 )
 
-// TODO need consts.go
-
 func Home_Dir() (hd string, err error) {
 	usr, err := user.Current()
 	if err != nil {

@@ -63,3 +63,13 @@ func String2PubKey(s string) (pk ed25519.PublicKey) {
 	pk = (ed25519.PublicKey)(b)
 	return
 }
+
+func Slice2PubKey(s []byte) (pk ed25519.PublicKey) {
+	pk = (ed25519.PublicKey)(s)
+	return
+}
+
+func Slice2PrivKey(s []byte) (pk ed25519.PrivateKey) {
+	pk = (ed25519.PrivateKey)(s)
+	return
+}
