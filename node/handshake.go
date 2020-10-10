@@ -151,9 +151,13 @@ func prepareChallengeResponse(
 		return
 	}
 	fmt.Println("debug priv", priv)
-	// TODO
 	// sign
-
+	sig, err := Sign(priv.(*ed25519.PrivateKey), hp.Challenge)
+	fmt.Println("debug sig err", sig, err)
+	if err != nil {
+		// LOG
+		return
+	}
 	// send back to server
 
 	// FIXME

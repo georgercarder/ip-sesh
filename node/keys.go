@@ -1,7 +1,10 @@
 package node
 
 import (
+	"crypto"
 	"crypto/ed25519"
+	"crypto/rand"
+
 	//"fmt"
 	"os/user"
 )
@@ -75,4 +78,11 @@ func GoodPrivKeyLen(pk ed25519.PrivateKey) (ok bool) {
 		ok = true
 	}
 	return
+}
+
+func Sign(pk *ed25519.PrivateKey, message []byte) (sig []byte, err error) {
+	// setting opts to crypto.Hash(0) as recommended line :66
+	// of crypto/ed25519.go which says the message should not be
+	// pre-hashed!!!
+	return pk.Sign(rand.Reader, message, crypto.Hash(0))
 }

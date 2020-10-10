@@ -170,7 +170,7 @@ func (s *SSHMgr) ImportPrivKey(
 	k.M.Put(Key2String(priv), true)
 	s.Domains.DomainName2PrivKeys.Put(domainName, k)
 	pub := PubFromPriv(priv)
-	s.PubKey2PrivKey.Put(Key2String(pub), priv)
+	s.PubKey2PrivKey.Put(Key2String(pub), &priv)
 	return
 }
 
