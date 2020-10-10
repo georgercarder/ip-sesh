@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/ethereum/go-ethereum v1.9.22
 	github.com/georgercarder/alerts v0.0.1
+	github.com/georgercarder/lockless-map v0.0.7
 	github.com/georgercarder/mod_init v0.0.3
 	github.com/georgercarder/same v0.0.1
 	github.com/ipfs/go-cid v0.0.7
