@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -23,6 +24,8 @@ func (ss StreamStatus) Byte() (b byte) {
 	return
 }
 
+const G_MaxNetworkTimeout = 4 * time.Second // TODO PUT IN CONSTS
+
 func checkAgainstPendingHandshakes(hp *HandshakePacket) (ok bool) {
 	storedHs := G_HandshakeMgr.DomainName2Handshake.Take(hp.DomainName)
 	if storedHs == nil {
@@ -30,6 +33,10 @@ func checkAgainstPendingHandshakes(hp *HandshakePacket) (ok bool) {
 		return
 	}
 	sHs := storedHs.(*Handshake)
+	if time.Since(sHs.LastTouch) > G_MaxNetworkTimeout {
+		// LOG
+		return
+	}
 	return VerifySig(sHs.PubKey, sHs.Challenge, hp.Signature)
 }
 

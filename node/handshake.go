@@ -30,8 +30,12 @@ type HandshakeMgr struct {
 
 func (m *HandshakeMgr) newHandshake(
 	hp *HandshakePacket, pubKey *ed25519.PublicKey) {
-	hs := &Handshake{DomainName: hp.DomainName,
-		Nonce: hp.Nonce, Challenge: hp.Challenge, PubKey: pubKey}
+	hs := &Handshake{
+		DomainName: hp.DomainName,
+		Nonce:      hp.Nonce,
+		Challenge:  hp.Challenge,
+		PubKey:     pubKey,
+		LastTouch:  time.Now()}
 	hs.StopChnl = make(chan bool)
 	m.DomainName2Handshake.Put(hp.DomainName, hs)
 	m.Nonce2Handshake.Put(string(hp.Nonce), hs)
@@ -65,7 +69,7 @@ type Handshake struct {
 	Challenge  []byte
 	PubKey     *ed25519.PublicKey
 	StopChnl   (chan bool)
-	// TODO last touch
+	LastTouch  time.Time
 }
 
 // TODO
