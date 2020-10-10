@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	. "github.com/georgercarder/lockless-map"
 	mi "github.com/georgercarder/mod_init"
 	"github.com/georgercarder/same"
 )
@@ -37,13 +38,13 @@ func newSSHMgr() (s interface{}) { //*SSHMgr
 
 func newDomains() (d *domains) {
 	d = new(domains)
-	d.DomainName2PrivKeys = make(map[string]*keys)
+	d.DomainName2PrivKeys = NewLocklessMap() // make(map[string]*keys)
 	return
 }
 
 func newAuthorized() (a *authorized) {
 	a = new(authorized)
-	a.DomainName2PubKeys = make(map[string]*keys)
+	a.DomainName2PubKeys = NewLocklessMap() // make(map[string]*keys)
 	return
 }
 
@@ -54,21 +55,21 @@ type SSHMgr struct {
 }
 
 type domains struct {
-	DomainName2PrivKeys map[string]*keys
+	DomainName2PrivKeys LocklessMap // map[string]*keys
 }
 
 type authorized struct {
-	DomainName2PubKeys map[string]*keys
+	DomainName2PubKeys LocklessMap // map[string]*keys
 }
 
 func newKeys() (k *keys) {
 	k = new(keys)
-	k.M = make(map[string]bool)
+	k.M = NewLocklessMap() // make(map[string]bool)
 	return
 }
 
 type keys struct {
-	M map[string]bool
+	M LocklessMap // map[string]bool
 }
 
 func (s *SSHMgr) setCachedKeys() {
@@ -146,10 +147,9 @@ func (s *SSHMgr) ImportPubKey(
 			"Check config.")
 		return
 	}
-	if s.Authorized.DomainName2PubKeys[domainName] == nil {
-		s.Authorized.DomainName2PubKeys[domainName] = newKeys()
-	}
-	s.Authorized.DomainName2PubKeys[domainName].M[Key2String(pub)] = true
+	k := newKeys()
+	k.M.Put(Key2String(pub), true)
+	s.Authorized.DomainName2PubKeys.Put(domainName, k)
 	return
 }
 
@@ -166,24 +166,25 @@ func (s *SSHMgr) ImportPrivKey(
 			"Check config.")
 		return
 	}
-	if s.Domains.DomainName2PrivKeys[domainName] == nil {
-		s.Domains.DomainName2PrivKeys[domainName] = newKeys()
-	}
-	s.Domains.DomainName2PrivKeys[domainName].M[Key2String(priv)] = true
+	k := newKeys()
+	k.M.Put(Key2String(priv), true)
+	s.Domains.DomainName2PrivKeys.Put(domainName, k)
 	return
 }
 
 func (s *SSHMgr) DumpPubKeys(domainName string) (pks []*ed25519.PublicKey) {
 	s.Lock()
 	defer s.Unlock()
-	pubKeys := s.Authorized.DomainName2PubKeys[domainName]
+	pubKeys := s.Authorized.DomainName2PubKeys.Take(domainName)
 	if pubKeys == nil {
 		fmt.Println("debug *SSHMgr.DumpPubKeys pubKeys empty.",
 			domainName)
 		return
 	}
-	for s, _ := range pubKeys.M {
-		pk := String2PubKey(s)
+	ks := pubKeys.(*keys)
+	dumped := ks.M.Dump()
+	for _, s := range dumped.Keys {
+		pk := String2PubKey(s.(string))
 		pks = append(pks, &pk)
 	}
 	return
@@ -204,13 +205,15 @@ func getPubKey(domainName string) (pk *ed25519.PublicKey) {
 func (s *SSHMgr) getPubKey(domainName string) (pk *ed25519.PublicKey) {
 	s.Lock()
 	defer s.Unlock()
-	privKeys := s.Domains.DomainName2PrivKeys[domainName]
+	privKeys := s.Domains.DomainName2PrivKeys.Take(domainName)
 	if privKeys == nil {
 		// TODO LOG
 		return
 	}
-	for s, _ := range privKeys.M {
-		priv := String2PrivKey(s)
+	ks := privKeys.(*keys)
+	dumped := ks.M.Dump()
+	for _, s := range dumped.Keys {
+		priv := String2PrivKey(s.(string))
 		fmt.Println("debug getPubKey priv", priv)
 		pub := PubFromPriv(*priv)
 		pk = &pub
