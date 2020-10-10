@@ -14,7 +14,9 @@ import (
 
 // TODO REMOVE LOCK
 
-func G_SSHMgr() (n *SSHMgr) {
+// make this only accessible within this module
+// since it has priv keys accessible
+func g_SSHMgr() (n *SSHMgr) {
 	nn, err := modInitializerSSHMgr.Get()
 	if err != nil {
 		//LogError.Println("G_Node:", err)
@@ -30,6 +32,7 @@ var modInitializerSSHMgr = mi.NewModInit(newSSHMgr,
 
 func newSSHMgr() (s interface{}) { //*SSHMgr
 	ss := new(SSHMgr)
+	ss.PubKey2PrivKey = NewLocklessMap()
 	ss.Domains = newDomains()
 	ss.Authorized = newAuthorized()
 	ss.setCachedKeys()
@@ -50,8 +53,9 @@ func newAuthorized() (a *authorized) {
 }
 
 type SSHMgr struct {
-	Domains    *domains
-	Authorized *authorized
+	Domains        *domains
+	Authorized     *authorized
+	PubKey2PrivKey LocklessMap
 }
 
 type domains struct {
@@ -165,6 +169,8 @@ func (s *SSHMgr) ImportPrivKey(
 	k := newKeys()
 	k.M.Put(Key2String(priv), true)
 	s.Domains.DomainName2PrivKeys.Put(domainName, k)
+	pub := PubFromPriv(priv)
+	s.PubKey2PrivKey.Put(Key2String(pub), priv)
 	return
 }
 
@@ -190,13 +196,13 @@ func (s *SSHMgr) IsAuthorized(pk *ed25519.PublicKey) (tf bool) {
 }
 
 // called during handshake by client
-func getPubKey(domainName string) (pk *ed25519.PublicKey) {
-	mgr := G_SSHMgr()
-	pk = mgr.getPubKey(domainName)
+func pickPubKey(domainName string) (pk *ed25519.PublicKey) {
+	mgr := g_SSHMgr()
+	pk = mgr.pickPubKey(domainName)
 	return
 }
 
-func (s *SSHMgr) getPubKey(domainName string) (pk *ed25519.PublicKey) {
+func (s *SSHMgr) pickPubKey(domainName string) (pk *ed25519.PublicKey) {
 	privKeys := s.Domains.DomainName2PrivKeys.Take(domainName)
 	if privKeys == nil {
 		// TODO LOG
@@ -209,7 +215,7 @@ func (s *SSHMgr) getPubKey(domainName string) (pk *ed25519.PublicKey) {
 		fmt.Println("debug getPubKey priv", priv)
 		pub := PubFromPriv(*priv)
 		pk = &pub
-		return
+		return // just take one
 	}
 	return
 }
@@ -217,7 +223,7 @@ func (s *SSHMgr) getPubKey(domainName string) (pk *ed25519.PublicKey) {
 func checkPubKeys(domainName string,
 	hash, nonce []byte) (pubKey *ed25519.PublicKey, ok bool) {
 	fmt.Println("debug checkPubKeys", domainName, hash, nonce)
-	pks := G_SSHMgr().DumpPubKeys(domainName)
+	pks := g_SSHMgr().DumpPubKeys(domainName)
 	fmt.Println("debug pks", pks)
 	// TODO PUT IN THREADS
 	for _, pk := range pks {
