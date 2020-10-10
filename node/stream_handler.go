@@ -28,10 +28,6 @@ func handleStream(s network.Stream) (err error) {
 	switch StreamStatus(ss[0]) {
 	case HandshakeInitChallenge:
 		return handleHandshakeInitChallenge(s)
-	/*case HandshakeResponse:
-		return checkHandshakeResponse(s)
-	case HandshakeResult:
-		return checkHandshakeResult(s)*/ // this is continued stream
 	case ShellFrame:
 		return shellFrame(s)
 	}
