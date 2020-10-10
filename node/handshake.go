@@ -28,9 +28,10 @@ type HandshakeMgr struct {
 	Nonce2Handshake      LocklessMap // map[string]*Handshake
 }
 
-func (m *HandshakeMgr) newHandshake(hp *HandshakePacket, pubKey *ed25519.PublicKey) {
+func (m *HandshakeMgr) newHandshake(
+	hp *HandshakePacket, pubKey *ed25519.PublicKey) {
 	hs := &Handshake{DomainName: hp.DomainName,
-		Nonce: hp.Nonce, PubKey: pubKey} // TODO
+		Nonce: hp.Nonce, Challenge: hp.Challenge, PubKey: pubKey}
 	hs.StopChnl = make(chan bool)
 	m.DomainName2Handshake.Put(hp.DomainName, hs)
 	m.Nonce2Handshake.Put(string(hp.Nonce), hs)
@@ -61,6 +62,7 @@ func (m *HandshakeMgr) Stop(domainName string) <-chan bool {
 type Handshake struct {
 	DomainName string
 	Nonce      []byte
+	Challenge  []byte
 	PubKey     *ed25519.PublicKey
 	StopChnl   (chan bool)
 	// TODO last touch
@@ -92,6 +94,7 @@ type HandshakePacket struct {
 	Nonce      []byte
 	Hash       []byte
 	Challenge  []byte
+	Signature  []byte
 	PubKey     *ed25519.PublicKey
 }
 
@@ -132,8 +135,6 @@ func publishUntilChallenge(hp *HandshakePacket) {
 
 // 3. respond to challenge
 // TODO
-// put this in
-//G_HandshakeMgr.SendStop(domainName)
 func prepareChallengeResponse(
 	hp *HandshakePacket) (res *HandshakePacket, err error) {
 	// hp does not have domain name (it could but server can cheat),
@@ -159,9 +160,8 @@ func prepareChallengeResponse(
 		return
 	}
 	// send back to server
-
-	// FIXME
-
+	hp.Signature = sig
+	res = hp
 	return
 }
 

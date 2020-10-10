@@ -28,15 +28,16 @@ func handleStream(s network.Stream) (err error) {
 	switch StreamStatus(ss[0]) {
 	case HandshakeInitChallenge:
 		return handleHandshakeInitChallenge(s)
-	case HandshakeResponse:
+	/*case HandshakeResponse:
 		return checkHandshakeResponse(s)
 	case HandshakeResult:
-		return checkHandshakeResult(s)
+		return checkHandshakeResult(s)*/ // this is continued stream
 	case ShellFrame:
 		return shellFrame(s)
 	}
 	return fmt.Errorf("handleStream: "+
 		"StreamStatus not supported. %d", ss[0])
+
 }
 
 // client
@@ -54,18 +55,27 @@ func handleHandshakeInitChallenge(s network.Stream) (err error) {
 	if err != nil {
 		return
 	}
-	return sendToStream(s, HandshakeResponse, response.Bytes())
+	fmt.Println("debug before sendToStream", response)
+	err = sendResponse(s, response.Bytes())
+	fmt.Println("debug err", err)
+	if err != nil {
+		return
+	}
+	return checkHandshakeResult(s)
 }
 
 // 4
 func checkHandshakeResult(s network.Stream) (err error) {
+	fmt.Println("debug checkHandshakeResult start")
 	ok, err := readHandshakeResult(s)
+	fmt.Println("debug readHandshakeResult", ok, err)
 	if err != nil {
 		return
 	}
-	if ok != true {
+	if !ok {
 		err = fmt.Errorf("checkHandshakeResult: " +
 			"Handshake result not ok.")
+		return
 	}
 	// TODO RUN SHELL SESSION
 	fmt.Println("debug run shell session here")
@@ -79,19 +89,26 @@ func sendChallenge(s network.Stream,
 	nonce []byte, pk *ed25519.PublicKey) (err error) {
 	chlg := prepareChallenge()
 	hp := &HandshakePacket{Challenge: chlg, PubKey: pk, Nonce: nonce}
-	return sendToStream(s, HandshakeInitChallenge, hp.Bytes())
+	G_HandshakeMgr.newHandshake(hp, pk)
+	err = sendToStream(s, HandshakeInitChallenge, hp.Bytes())
+	if err != nil {
+		return
+	}
+	return checkHandshakeResponse(s)
 }
 
 // 3
 func checkHandshakeResponse(s network.Stream) (err error) {
+	fmt.Println("debug checkHandshakeResponse")
 	hp, err := readHandshakePacket(s)
 	if err != nil {
+		fmt.Println("debug err", err)
 		return
 	}
+	fmt.Println("debug hp", hp)
 	ok := checkAgainstPendingHandshakes(hp)
 	g_activeSessions.Put(s.Conn().RemotePeer())
-	return sendBackToClient(s, HandshakeResult,
-		[]byte{Boole2Byte(ok)})
+	return sendResponse(s, []byte{Boole2Byte(ok)})
 }
 
 func shellFrame(s network.Stream) (err error) {

@@ -1,7 +1,10 @@
 package node
 
 import (
-	"crypto/ed25519"
+	"fmt"
+	"io"
+
+	. "github.com/georgercarder/same"
 
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -22,31 +25,51 @@ func (ss StreamStatus) Byte() (b byte) {
 	return
 }
 
-var g_pendingHandshakes = newPendingHandshakes()
-
-func newPendingHandshakes() (p *pendingHandshakes) {
-	// TODO init
-	return
-}
-
-type pendingHandshakes struct {
-	// TODO
-}
-
-func (p *pendingHandshakes) Put(b []byte, pk *ed25519.PublicKey) {
-	// TODO
-	return
-}
-
-func (p *pendingHandshakes) Check(hp *HandshakePacket) (ok bool) {
-	// TODO
-	// checks if ed25519 sig is valid
-
-	return
-}
-
 func checkAgainstPendingHandshakes(hp *HandshakePacket) (ok bool) {
-	return g_pendingHandshakes.Check(hp)
+	storedHs := G_HandshakeMgr.DomainName2Handshake.Take(hp.DomainName)
+	if storedHs == nil {
+		// LOG
+		return
+	}
+	sHs := storedHs.(*Handshake)
+	if !Same(hp.Challenge, sHs.Challenge) {
+		// LOG
+		return
+	}
+	if !Same(Key2Slice(hp.PubKey), Key2Slice(sHs.PubKey)) {
+		// LOG
+		return
+	}
+	return VerifySig(sHs.PubKey, sHs.Challenge, hp.Signature)
+}
+
+func sendResponse(s network.Stream, msg []byte) (err error) {
+	_, err = io.Copy(s, newMsgReader(msg))
+	return
+}
+
+type msgReader struct {
+	buf []byte
+}
+
+func newMsgReader(b []byte) io.Reader {
+	m := &msgReader{buf: b}
+	return m
+}
+
+func (m *msgReader) Read(b []byte) (n int, err error) {
+	copy(b, m.buf[:])
+	if len(b) > len(m.buf) {
+		n = len(m.buf)
+	} else {
+		n = len(b)
+	}
+	if n == 0 {
+		err = io.EOF
+		return
+	}
+	m.buf = m.buf[n:]
+	return
 }
 
 func sendBackToClient(
@@ -56,6 +79,7 @@ func sendBackToClient(
 
 func sendToStream(
 	s network.Stream, status StreamStatus, msg []byte) (err error) {
+	fmt.Println("debug sendToStream", status, msg)
 	return writeToStream(s, status, msg)
 }
 
@@ -73,17 +97,37 @@ func Boole2Byte(b bool) (ret byte) {
 	return
 }
 
+func Byte2Boole(b byte) (ret bool) {
+	if b == byte(0x1) {
+		ret = true
+	}
+	return
+}
+
 func readHandshakePacket(s network.Stream) (hp *HandshakePacket, err error) {
 	b := make([]byte, 1024)
 	n, err := s.Read(b)
 	if err != nil {
-		return
+		if err != io.EOF {
+			return
+		}
 	}
 	return Slice2HandshakePacket(b[:n])
 }
 
 func readHandshakeResult(s network.Stream) (res bool, err error) {
-	// TODO
+	b := make([]byte, 1)
+	n, err := s.Read(b)
+	if err != nil {
+		if err != io.EOF {
+			return
+		}
+	}
+	if n < 1 {
+		err = fmt.Errorf("Must read at least 1 byte.")
+		return
+	}
+	res = Byte2Boole(b[0])
 	return
 }
 

@@ -86,3 +86,7 @@ func Sign(pk *ed25519.PrivateKey, message []byte) (sig []byte, err error) {
 	// pre-hashed!!!
 	return pk.Sign(rand.Reader, message, crypto.Hash(0))
 }
+
+func VerifySig(pk *ed25519.PublicKey, message, sig []byte) (ok bool) {
+	return ed25519.Verify(*pk, message, sig)
+}
