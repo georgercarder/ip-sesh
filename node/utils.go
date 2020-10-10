@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	. "github.com/georgercarder/same"
-
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 )
@@ -32,14 +30,6 @@ func checkAgainstPendingHandshakes(hp *HandshakePacket) (ok bool) {
 		return
 	}
 	sHs := storedHs.(*Handshake)
-	if !Same(hp.Challenge, sHs.Challenge) {
-		// LOG
-		return
-	}
-	if !Same(Key2Slice(hp.PubKey), Key2Slice(sHs.PubKey)) {
-		// LOG
-		return
-	}
 	return VerifySig(sHs.PubKey, sHs.Challenge, hp.Signature)
 }
 
