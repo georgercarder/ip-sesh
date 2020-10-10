@@ -19,21 +19,24 @@ var G_HandshakeMgr = newHandshakeMgr() // TODO USE MODINIT
 func newHandshakeMgr() (h *HandshakeMgr) {
 	h = new(HandshakeMgr)
 	h.DomainName2Handshake = NewLocklessMap()
+	h.Nonce2DomainName = NewLocklessMap()
 	return
 }
 
 type HandshakeMgr struct {
 	DomainName2Handshake LocklessMap // map[string]*Handshake
+	Nonce2DomainName     LocklessMap // map[string]string
 }
 
-func (m *HandshakeMgr) newHandshake(domainName string) {
+func (m *HandshakeMgr) newHandshake(domainName string, nonce []byte) {
 	hs := new(Handshake)
 	hs.StopChnl = make(chan bool)
 	m.DomainName2Handshake.Put(domainName, hs)
+	m.Nonce2DomainName.Put(string(nonce), domainName)
 }
 
 func (m *HandshakeMgr) SendStop(domainName string) {
-	fmt.Println("debug SendStop", domainName)
+	fmt.Println("debug SendStop start", domainName)
 	hs := m.DomainName2Handshake.Take(domainName)
 	if hs != nil {
 		fmt.Println("debug SendStop")
@@ -74,7 +77,7 @@ func StartHandshake(domainName string) {
 	fmt.Println("debug hash", hash)
 	hp := &HandshakePacket{DomainName: domainName,
 		Nonce: nonce, Hash: hash}
-	G_HandshakeMgr.newHandshake(domainName)
+	G_HandshakeMgr.newHandshake(domainName, nonce)
 	go publishUntilChallenge(hp)
 }
 
@@ -129,7 +132,17 @@ func publishUntilChallenge(hp *HandshakePacket) {
 //G_HandshakeMgr.SendStop(domainName)
 func prepareChallengeResponse(
 	hp *HandshakePacket) (res *HandshakePacket, err error) {
-	// TODO
+	// TODO // more
+
+	// hp does not have domain name (it could but server can cheat),
+	// so best to map nonce to domain name internally
+	dn := G_HandshakeMgr.Nonce2DomainName.Take(string(hp.Nonce))
+	if dn == nil {
+		err = fmt.Errorf("nonce does not map to a domain name.")
+		return
+	}
+	G_HandshakeMgr.SendStop(dn.(string))
+
 	return
 }
 
@@ -168,7 +181,7 @@ func checkAndRespondToAlert(domainName string, a []byte) {
 	if err != nil {
 		// TODO HANDLE
 	}
-	sendChallenge(s, pubKey)
+	sendChallenge(s, hp.Nonce, pubKey)
 }
 
 // 4. validate challenge response, put pid in active screens

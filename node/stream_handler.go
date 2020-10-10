@@ -75,9 +75,10 @@ func checkHandshakeResult(s network.Stream) (err error) {
 // server
 
 // 1
-func sendChallenge(s network.Stream, pk *ed25519.PublicKey) (err error) {
+func sendChallenge(s network.Stream,
+	nonce []byte, pk *ed25519.PublicKey) (err error) {
 	chlg := prepareChallenge()
-	hp := &HandshakePacket{Challenge: chlg, PubKey: pk}
+	hp := &HandshakePacket{Challenge: chlg, PubKey: pk, Nonce: nonce}
 	return sendToStream(s, HandshakeInitChallenge, hp.Bytes())
 }
 
