@@ -74,8 +74,12 @@ func Boole2Byte(b bool) (ret byte) {
 }
 
 func readHandshakePacket(s network.Stream) (hp *HandshakePacket, err error) {
-	// TODO
-	return
+	b := make([]byte, 1024)
+	n, err := s.Read(b)
+	if err != nil {
+		return
+	}
+	return Slice2HandshakePacket(b[:n])
 }
 
 func readHandshakeResult(s network.Stream) (res bool, err error) {

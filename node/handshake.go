@@ -98,6 +98,7 @@ func (hp *HandshakePacket) Bytes() (b []byte) {
 
 func Slice2HandshakePacket(b []byte) (hp *HandshakePacket, err error) {
 	hp = new(HandshakePacket)
+	fmt.Println("debug Slice2HandshakePacket", b)
 	err = json.Unmarshal(b, &hp)
 	return
 }

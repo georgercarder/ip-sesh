@@ -46,8 +46,10 @@ func handleHandshakeInitChallenge(s network.Stream) (err error) {
 	fmt.Println("debug handleHandshakeInitChallenge")
 	hp, err := readHandshakePacket(s)
 	if err != nil {
+		fmt.Println("debug err", err)
 		return
 	}
+	fmt.Println("debug handshakePacket", hp)
 	response, err := prepareChallengeResponse(hp)
 	if err != nil {
 		return
