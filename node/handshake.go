@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	. "github.com/georgercarder/lockless-map"
 	"github.com/georgercarder/same"
 
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -18,13 +19,13 @@ var G_HandshakeMgr = newHandshakeMgr() // TODO USE MODINIT
 
 func newHandshakeMgr() (h *HandshakeMgr) {
 	h = new(HandshakeMgr)
-	h.DomainName2Handshake = make(map[string]*Handshake)
+	h.DomainName2Handshake = NewLocklessMap()
 	return
 }
 
 type HandshakeMgr struct {
 	sync.RWMutex
-	DomainName2Handshake map[string]*Handshake
+	DomainName2Handshake LocklessMap // map[string]*Handshake
 }
 
 func (m *HandshakeMgr) newHandshake(domainName string) {
@@ -32,23 +33,31 @@ func (m *HandshakeMgr) newHandshake(domainName string) {
 	defer m.Unlock()
 	hs := new(Handshake)
 	hs.StopChnl = make(chan bool)
-	m.DomainName2Handshake[domainName] = hs
+	m.DomainName2Handshake.Put(domainName, hs)
 }
 
 func (m *HandshakeMgr) SendStop(domainName string) {
 	fmt.Println("debug SendStop", domainName)
-	if m.DomainName2Handshake[domainName] != nil {
+	hs := m.DomainName2Handshake.Take(domainName)
+	if hs != nil {
 		fmt.Println("debug SendStop")
 		stop := true
-		m.DomainName2Handshake[domainName].StopChnl <- stop
+		hhs := hs.(*Handshake)
+		hhs.StopChnl <- stop
 	}
 }
 
 func (m *HandshakeMgr) Stop(domainName string) <-chan bool {
 	m.Lock()
-	hs := m.DomainName2Handshake[domainName]
+	hs := m.DomainName2Handshake.Take(domainName)
 	m.Unlock()
-	return hs.StopChnl
+	if hs == nil {
+		// TODO LOG
+		// this should not!! happen
+		return make(chan bool) // empty chnl
+	}
+	hhs := hs.(*Handshake)
+	return hhs.StopChnl
 }
 
 type Handshake struct {
