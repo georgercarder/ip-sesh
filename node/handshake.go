@@ -5,7 +5,6 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	. "github.com/georgercarder/lockless-map"
@@ -24,13 +23,10 @@ func newHandshakeMgr() (h *HandshakeMgr) {
 }
 
 type HandshakeMgr struct {
-	sync.RWMutex
 	DomainName2Handshake LocklessMap // map[string]*Handshake
 }
 
 func (m *HandshakeMgr) newHandshake(domainName string) {
-	m.Lock()
-	defer m.Unlock()
 	hs := new(Handshake)
 	hs.StopChnl = make(chan bool)
 	m.DomainName2Handshake.Put(domainName, hs)
@@ -48,9 +44,7 @@ func (m *HandshakeMgr) SendStop(domainName string) {
 }
 
 func (m *HandshakeMgr) Stop(domainName string) <-chan bool {
-	m.Lock()
 	hs := m.DomainName2Handshake.Take(domainName)
-	m.Unlock()
 	if hs == nil {
 		// TODO LOG
 		// this should not!! happen

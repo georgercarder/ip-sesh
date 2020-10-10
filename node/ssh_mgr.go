@@ -6,12 +6,13 @@ import (
 
 	"strconv"
 	"strings"
-	"sync"
 
 	. "github.com/georgercarder/lockless-map"
 	mi "github.com/georgercarder/mod_init"
 	"github.com/georgercarder/same"
 )
+
+// TODO REMOVE LOCK
 
 func G_SSHMgr() (n *SSHMgr) {
 	nn, err := modInitializerSSHMgr.Get()
@@ -49,7 +50,6 @@ func newAuthorized() (a *authorized) {
 }
 
 type SSHMgr struct {
-	sync.RWMutex
 	Domains    *domains
 	Authorized *authorized
 }
@@ -136,8 +136,6 @@ func identifyFile(fname string) (ft SESH_FILETYPE) {
 func (s *SSHMgr) ImportPubKey(
 	domainName string, pub ed25519.PublicKey) (err error) {
 	fmt.Println("debug *SSHMgr ImportPubKey", domainName, pub)
-	s.Lock()
-	defer s.Unlock()
 	if pub == nil {
 		err = fmt.Errorf("*SSHMgr: key must be non-nil.")
 		return
@@ -155,8 +153,6 @@ func (s *SSHMgr) ImportPubKey(
 
 func (s *SSHMgr) ImportPrivKey(
 	domainName string, priv ed25519.PrivateKey) (err error) {
-	s.Lock()
-	defer s.Unlock()
 	if priv == nil {
 		err = fmt.Errorf("*SSHMgr: key must be non-nil.")
 		return
@@ -173,8 +169,6 @@ func (s *SSHMgr) ImportPrivKey(
 }
 
 func (s *SSHMgr) DumpPubKeys(domainName string) (pks []*ed25519.PublicKey) {
-	s.Lock()
-	defer s.Unlock()
 	pubKeys := s.Authorized.DomainName2PubKeys.Take(domainName)
 	if pubKeys == nil {
 		fmt.Println("debug *SSHMgr.DumpPubKeys pubKeys empty.",
@@ -203,8 +197,6 @@ func getPubKey(domainName string) (pk *ed25519.PublicKey) {
 }
 
 func (s *SSHMgr) getPubKey(domainName string) (pk *ed25519.PublicKey) {
-	s.Lock()
-	defer s.Unlock()
 	privKeys := s.Domains.DomainName2PrivKeys.Take(domainName)
 	if privKeys == nil {
 		// TODO LOG

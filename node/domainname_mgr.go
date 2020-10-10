@@ -2,10 +2,10 @@ package node
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/georgercarder/alerts"
+	. "github.com/georgercarder/lockless-map"
 	mi "github.com/georgercarder/mod_init"
 )
 
@@ -34,7 +34,7 @@ func newDomNameMgr() (n interface{}) { // *DomNameMgr
 	// if domName not set, SafelyShutdown emitting error
 	// otherwise calls dnsLink w domName
 	nn := new(DomNameMgr)
-	nn.names = make(map[string]*DomName)
+	nn.names = NewLocklessMap() // make(map[string]*DomName)
 	n = nn
 	return
 }
@@ -48,8 +48,7 @@ func GetDomainNames() (names []string) {
 }
 
 type DomNameMgr struct {
-	sync.RWMutex
-	names map[string]*DomName
+	names LocklessMap // map[string]*DomName
 }
 
 type DomName struct {
@@ -58,11 +57,9 @@ type DomName struct {
 }
 
 func (d *DomNameMgr) serveDomain(domainName string) {
-	d.Lock()
-	defer d.Unlock()
 	dn := &DomName{name: domainName, alert: newDomainAlert(domainName)}
 	go handleDomAlerts(dn)
-	d.names[domainName] = dn
+	d.names.Put(domainName, dn)
 	Subscribe(domainName, domainName) // topic, alertName
 }
 
@@ -85,10 +82,9 @@ func newDomainAlert(domainName string) <-chan interface{} {
 // TODO SUBSCRIBE TO ALERTS
 
 func (d *DomNameMgr) getDomainNames() (names []string) {
-	d.RLock()
-	defer d.Unlock()
-	for n, _ := range d.names {
-		names = append(names, n)
+	dumped := d.names.Dump()
+	for _, n := range dumped.Keys {
+		names = append(names, n.(string))
 	}
 	return
 }
