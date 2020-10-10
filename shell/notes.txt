@@ -1,0 +1,56 @@
+https://gist.github.com/napicella/777e83c0ef5b77bf72c0a5d5da9a4b4e
+
+Thanks to 
+Nicola Apicella
+https://gist.github.com/napicella
+
+
+// Companion code for the Linux terminals blog series: https://dev.to/napicella/linux-terminals-tty-pty-and-shell-192e
+// I have simplified the code to highlight the interesting bits for the purpose of the blog post:
+// - windows resizing is not addressed
+// - client does not catch signals (CTRL + C, etc.) to gracefully close the tcp connection
+// 
+// Build: go build -o remote main.go
+// In one terminal run: ./remote -server
+// In another terminal run: ./remote 
+// 
+// Run on multiple machines:
+// In the client function, replace the loopback address with IP of the machine, then rebuild
+// Beware the unecrypted TCP connection!
+package main
+
+import (
+	"flag"
+	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
+	"io"
+	"net"
+	"os"
+	"os/exec"
+
+	"github.com/creack/pty"
+)
+
+var isServer *bool
+
+func init()  {
+	isServer = flag.Bool("server", false, "")
+}
+
+
+func clientAndServer() error {
+	flag.Parse()
+	if isServer != nil && *isServer {
+		fmt.Println("Starting server mode")
+		return server()
+	} else {
+		fmt.Println("Starting client mode")
+		return client()
+	}
+}
+
+func main() {
+	if e := clientAndServer(); e != nil {
+		fmt.Println(e)
+	}
+}
