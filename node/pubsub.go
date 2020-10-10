@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 
 	"github.com/georgercarder/alerts"
+	. "github.com/georgercarder/lockless-map"
 	mi "github.com/georgercarder/mod_init"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -40,9 +40,7 @@ func PubSubTopicHashed(str string) (r string) {
 
 func newPubSub() (p interface{}) { // *pubSub
 	pp := new(pubSub)
-	pp.Lock()
-	defer pp.Unlock()
-	pp.M = make(map[string]*subNAlert)
+	pp.M = NewLocklessMap()
 	p = pp
 	return
 }
@@ -61,8 +59,7 @@ func handleSubscription(sNa *subNAlert) {
 }
 
 type pubSub struct {
-	sync.RWMutex
-	M map[string]*subNAlert
+	M LocklessMap // map[string]*subNAlert
 }
 
 type subNAlert struct {
@@ -95,7 +92,7 @@ func Subscribe(topic, alertName string) (err error) {
 	}
 	sNa := &subNAlert{s: sub,
 		alertName: alertName}
-	G_pubSub().M[topic] = sNa
+	G_pubSub().M.Put(topic, sNa)
 	go handleSubscription(sNa)
 	return
 }
