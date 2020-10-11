@@ -4,7 +4,9 @@ import (
 	"crypto/ed25519"
 	//"encoding/json"
 	"fmt"
-	"io"
+	//"io"
+
+	sh "github.com/georgercarder/ip-sesh/shell"
 
 	"github.com/libp2p/go-libp2p-core/network"
 )
@@ -28,8 +30,8 @@ func handleStream(s network.Stream) (err error) {
 	switch StreamStatus(ss[0]) {
 	case HandshakeInitChallenge:
 		return handleHandshakeInitChallenge(s)
-	case ShellFrame:
-		return shellFrame(s)
+		/*case Shell:
+		return shell(s)*/
 	}
 	return fmt.Errorf("handleStream: "+
 		"StreamStatus not supported. %d", ss[0])
@@ -73,9 +75,8 @@ func checkHandshakeResult(s network.Stream) (err error) {
 			"Handshake result not ok.")
 		return
 	}
-	// TODO RUN SHELL SESSION
-	fmt.Println("debug run shell session here")
-	return
+	fmt.Println("debug start shell session")
+	return sh.Client(StreamToConn(s)) // shell session
 }
 
 // server
@@ -104,14 +105,19 @@ func checkHandshakeResponse(s network.Stream) (err error) {
 	fmt.Println("debug hp", hp)
 	ok := checkAgainstPendingHandshakes(hp)
 	g_activeSessions.Put(s.Conn().RemotePeer())
-	return sendResponse(s, []byte{Boole2Byte(ok)})
+	err = sendResponse(s, []byte{Boole2Byte(ok)})
+	if err != nil {
+		fmt.Println("debug err", err)
+		return
+	}
+	return shell(s)
 }
 
-func shellFrame(s network.Stream) (err error) {
+func shell(s network.Stream) (err error) {
 	ok := g_activeSessions.Check(s.Conn().RemotePeer())
 	if !ok {
-		err = fmt.Errorf("shellFrame: "+
-			"not an active session. %q",
+		err = fmt.Errorf("shell: "+
+			"not a valid active session. %q",
 			s.Conn().RemotePeer())
 		return sendBackToClient(s, Error, nil)
 	}
@@ -119,17 +125,6 @@ func shellFrame(s network.Stream) (err error) {
 }
 
 func runSession(s network.Stream) (err error) {
-	sh := initShell()
-	go func() {
-		// send stream back stdout, stderr
-		_, er := io.Copy(s, sh)
-		if er != nil {
-			if er != io.EOF {
-				// TODO LOG
-				return
-			}
-		}
-	}()
-	_, err = io.Copy(sh, s)
+	err = sh.Server(StreamToConn(s))
 	return
 }

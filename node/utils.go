@@ -5,6 +5,8 @@ import (
 	"io"
 	"time"
 
+	. "github.com/georgercarder/lockless-map"
+
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 )
@@ -15,7 +17,7 @@ const (
 	HandshakeInitChallenge StreamStatus = iota
 	HandshakeResponse
 	HandshakeResult
-	ShellFrame
+	Shell
 	Error
 )
 
@@ -131,20 +133,37 @@ func readHandshakeResult(s network.Stream) (res bool, err error) {
 var g_activeSessions = newActiveSessions()
 
 func newActiveSessions() (p *activeSessions) {
-	// TODO init
+	p = new(activeSessions)
+	p.m = NewLocklessMap()
 	return
 }
 
 type activeSessions struct {
-	// TODO
+	m LocklessMap // map[string]bool pid->session
 }
 
 func (p *activeSessions) Put(pid peer.ID) {
-	// TODO
+	s := &session{pid: pid, lastTouch: time.Now()}
+	p.m.Put(pid.Pretty(), s)
 	return
 }
 
 func (p *activeSessions) Check(pid peer.ID) (ok bool) {
-	// TODO
+	ss := p.m.Take(pid.Pretty())
+	if ss == nil {
+		// TODO LOG
+		return
+	}
+	s := ss.(*session)
+	if time.Since(s.lastTouch) > G_MaxNetworkTimeout {
+		// TODO LOG
+		return
+	}
+	ok = true
 	return
+}
+
+type session struct {
+	pid       peer.ID
+	lastTouch time.Time
 }
