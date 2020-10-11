@@ -46,15 +46,13 @@ func main() {
 		}()
 	}
 	go sg.JoinProviders((*core.IpfsNode)(n))
-	for {
-		fmt.Println("Press ENTER for demo.")
-		getCharReader := bufio.NewReader(os.Stdin)
-		_, err := getCharReader.ReadString('\n')
-		if err != nil {
-			fmt.Println("debug error", err)
-		}
-		nd.StartHandshake("test.domain.com")
+	fmt.Println("Press ENTER for demo.")
+	getCharReader := bufio.NewReader(os.Stdin)
+	_, err := getCharReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("debug error", err)
 	}
+	nd.StartHandshake("test.domain.com")
 
 	select {}
 }
