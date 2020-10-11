@@ -35,18 +35,15 @@ func (c Conn) RemoteAddr() (addr net.Addr) {
 }
 
 func (c Conn) SetDeadline(t time.Time) (err error) {
-	// TODO
-	return
+	return c.S.SetDeadline(t)
 }
 
 func (c Conn) SetReadDeadline(t time.Time) (err error) {
-	// TODO
-	return
+	return c.S.SetReadDeadline(t)
 }
 
 func (c Conn) SetWriteDeadline(t time.Time) (err error) {
-	// TODO
-	return
+	return c.S.SetWriteDeadline(t)
 }
 
 func (c *Conn) LocalAddr() (addr net.Addr) {

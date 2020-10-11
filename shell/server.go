@@ -1,7 +1,6 @@
 package shell
 
 import (
-	"fmt"
 	"io"
 	"net"
 	"os/exec"
@@ -21,14 +20,12 @@ func Server(conn net.Conn) error {
 	// Start the command with a pty.
 	ptmx, e := pty.Start(c)
 	if e != nil {
-		fmt.Println("debug err", e)
 		return e
 	}
 	// Make sure to close the pty at the end.
 	defer func() {
 		_ = ptmx.Close()
 	}() // Best effort.
-	fmt.Println("debug accept")
 	go func() {
 		_, _ = io.Copy(ptmx, conn)
 	}()

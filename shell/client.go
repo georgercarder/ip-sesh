@@ -13,9 +13,7 @@ func Client(conn net.Conn) (err error) {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = terminal.Restore(int(os.Stdin.Fd()), oldState)
-	}() // Best effort.
+	defer terminal.Restore(int(os.Stdin.Fd()), oldState)
 	go func() {
 		_, _ = io.Copy(os.Stdout, conn)
 	}()

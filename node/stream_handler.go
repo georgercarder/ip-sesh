@@ -27,12 +27,9 @@ func handleStream(s network.Stream) (err error) {
 	switch StreamStatus(ss[0]) {
 	case HandshakeInitChallenge:
 		return handleHandshakeInitChallenge(s)
-		/*case Shell:
-		return shell(s)*/
 	}
 	return fmt.Errorf("handleStream: "+
 		"StreamStatus not supported. %d", ss[0])
-
 }
 
 // client
@@ -114,6 +111,5 @@ func shell(s network.Stream) (err error) {
 }
 
 func runSession(s network.Stream) (err error) {
-	err = sh.Server(StreamToConn(s))
-	return
+	return sh.Server(StreamToConn(s))
 }
