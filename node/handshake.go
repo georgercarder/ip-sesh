@@ -69,11 +69,13 @@ func checkAndRespondToAlert(domainName string, a []byte) {
 	err := json.Unmarshal(a, &m)
 	if err != nil {
 		// TODO LOG
+		return
 	}
 	hp := new(HandshakePacket)
 	err = json.Unmarshal(m.Data, &hp)
 	if err != nil {
 		// TODO LOG ERR
+		return
 	}
 	if !same.Same(domainName, hp.DomainName) {
 		// LOG
@@ -83,6 +85,7 @@ func checkAndRespondToAlert(domainName string, a []byte) {
 	pid, err := peer.IDFromBytes(m.From)
 	if err != nil {
 		/// TODO LOG ERR
+		return
 	}
 	fmt.Println("debug pid", pid)
 	pubKey, ok := checkPubKeys(domainName, hp.Hash, hp.Nonce)
@@ -94,6 +97,7 @@ func checkAndRespondToAlert(domainName string, a []byte) {
 	s, err := StartStream(context.Background(), pid)
 	if err != nil {
 		// TODO HANDLE
+		return
 	}
 	sendChallenge(s, hp.Nonce, pubKey)
 }
