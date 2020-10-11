@@ -19,10 +19,10 @@ import (
 func StartHandshake(domainName string) {
 	pubKey := pickPubKey(domainName) // in ssh_mgr
 	nonce := genNonce()              // in crypto
-	fmt.Println("debug pubKey", pubKey)
-	fmt.Println("debug input", Key2Slice(pubKey), nonce)
+	//fmt.Println("debug pubKey", pubKey)
+	//fmt.Println("debug input", Key2Slice(pubKey), nonce)
 	hash := Hash(Key2Slice(pubKey), nonce)
-	fmt.Println("debug hash", hash)
+	//fmt.Println("debug hash", hash)
 	hp := &HandshakePacket{DomainName: domainName,
 		Nonce: nonce, Hash: hash}
 	G_HandshakeMgr.newHandshake(hp, pubKey)
@@ -46,10 +46,10 @@ func prepareChallengeResponse(
 		err = fmt.Errorf("PubKey does not map to a priv key.")
 		return
 	}
-	fmt.Println("debug priv", priv)
+	//fmt.Println("debug priv", priv)
 	// sign
 	sig, err := Sign(priv.(*ed25519.PrivateKey), hp.Challenge)
-	fmt.Println("debug sig err", sig, err)
+	//fmt.Println("debug sig err", sig, err)
 	if err != nil {
 		// LOG
 		return
@@ -87,13 +87,13 @@ func checkAndRespondToAlert(domainName string, a []byte) {
 		/// TODO LOG ERR
 		return
 	}
-	fmt.Println("debug pid", pid)
+	//fmt.Println("debug pid", pid)
 	pubKey, ok := checkPubKeys(domainName, hp.Hash, hp.Nonce)
 	if !ok {
 		// log that pubkey doesn't exist
 		return
 	}
-	fmt.Println("debug pubKey, ok", pubKey, ok)
+	//fmt.Println("debug pubKey, ok", pubKey, ok)
 	s, err := StartStream(context.Background(), pid)
 	if err != nil {
 		// TODO HANDLE

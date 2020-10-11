@@ -14,12 +14,11 @@ import (
 
 func FastBootstrap(n *core.IpfsNode) {
 	numPeers := 0
+	fmt.Println("fast bootstrapping ...")
 	for numPeers < 1000 {
 		ps := n.Peerstore.Peers()
 		numPeers = len(ps)
-		fmt.Println("debug peers", len(ps))
 		time.Sleep(100 * time.Millisecond)
-
 		go func() {
 			dht := n.DHT
 			rval := make([]byte, 32)
@@ -27,14 +26,13 @@ func FastBootstrap(n *core.IpfsNode) {
 			ctx, cancel := context.WithTimeout(
 				context.Background(), 2*time.Second)
 			defer cancel()
-			v, err := dht.GetValue(ctx, string(rval))
-
+			_, err := dht.GetValue(ctx, string(rval))
 			if err != nil {
 				//fmt.Println("debug err", err)
 			}
-			fmt.Println("debug v", v)
 		}()
 	}
+	fmt.Println("fast bootstrapping done.")
 }
 
 func AnnounceProvide(n *core.IpfsNode) {
