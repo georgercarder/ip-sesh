@@ -100,6 +100,7 @@ func checkAndRespondToAlert(domainName string, a []byte) {
 		return
 	}
 	sendChallenge(s, hp.Nonce, pubKey)
+	defer s.Reset()
 }
 
 // 4. validate challenge response, put pid in active screens
