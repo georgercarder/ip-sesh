@@ -50,7 +50,6 @@ func AnnounceProvide(n *core.IpfsNode) {
 		if err != nil {
 			fmt.Println("debug provide err", err)
 		}
-		fmt.Println("debug provided")
 		time.Sleep(5 * time.Minute)
 	}
 }
@@ -81,11 +80,11 @@ func JoinProviders(n *core.IpfsNode) {
 				ctx2, cancel2 := context.WithTimeout(
 					context.Background(), 10*time.Second)
 				defer cancel2()
-				pr, err := nd.FindPeer(ctx2, pp.ID)
+				_, err := nd.FindPeer(ctx2, pp.ID)
 				if err != nil {
-					fmt.Println("debug FindPeer", err)
+					//fmt.Println("debug FindPeer", err)
 				}
-				fmt.Println("debug FindPeer done", pr.ID)
+				//fmt.Println("debug FindPeer done", pr.ID)
 				foundOne = true // this is janky FIXME
 			}(p)
 		}

@@ -94,9 +94,7 @@ func (s *SSHMgr) setCachedKeys() {
 	}
 	// server
 	for _, a := range cfg.Server.Authorized {
-		fmt.Println("debug setCachedKeys", a)
 		data, err := SafeFileRead(FSJoin(sesh_path, a.Keyfile))
-		fmt.Println("debug setCachedKeys", data, err)
 		if err != nil {
 			// TODO LOG
 			return
@@ -139,7 +137,6 @@ func identifyFile(fname string) (ft SESH_FILETYPE) {
 
 func (s *SSHMgr) ImportPubKey(
 	domainName string, pub ed25519.PublicKey) (err error) {
-	fmt.Println("debug *SSHMgr ImportPubKey", domainName, pub)
 	if pub == nil {
 		err = fmt.Errorf("*SSHMgr: key must be non-nil.")
 		return
@@ -212,7 +209,6 @@ func (s *SSHMgr) pickPubKey(domainName string) (pk *ed25519.PublicKey) {
 	dumped := ks.M.Dump()
 	for _, s := range dumped.Keys {
 		priv := String2PrivKey(s.(string))
-		fmt.Println("debug getPubKey priv", priv)
 		pub := PubFromPriv(*priv)
 		pk = &pub
 		return // just take one
@@ -222,13 +218,9 @@ func (s *SSHMgr) pickPubKey(domainName string) (pk *ed25519.PublicKey) {
 
 func checkPubKeys(domainName string,
 	hash, nonce []byte) (pubKey *ed25519.PublicKey, ok bool) {
-	fmt.Println("debug checkPubKeys", domainName, hash, nonce)
 	pks := g_SSHMgr().DumpPubKeys(domainName)
-	fmt.Println("debug pks", pks)
 	// TODO PUT IN THREADS
 	for _, pk := range pks {
-		fmt.Println("debug input", Key2Slice(pk), nonce)
-		fmt.Println("debug hash", hash, Hash(Key2Slice(pk), nonce))
 		if same.Same(hash, Hash(Key2Slice(pk), nonce)) {
 			pubKey = pk
 			ok = true

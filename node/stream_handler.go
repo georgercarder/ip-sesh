@@ -2,9 +2,7 @@ package node
 
 import (
 	"crypto/ed25519"
-	//"encoding/json"
 	"fmt"
-	//"io"
 
 	sh "github.com/georgercarder/ip-sesh/shell"
 
@@ -12,7 +10,6 @@ import (
 )
 
 func StreamHandler(s network.Stream) {
-	//fmt.Println("debug new stream!")
 	if err := handleStream(s); err != nil {
 		//LogError.Println("StreamHandler:", err)
 		s.Reset()
@@ -42,20 +39,16 @@ func handleStream(s network.Stream) (err error) {
 
 // 2
 func handleHandshakeInitChallenge(s network.Stream) (err error) {
-	fmt.Println("debug handleHandshakeInitChallenge")
 	hp, err := readHandshakePacket(s)
 	if err != nil {
 		fmt.Println("debug err", err)
 		return
 	}
-	fmt.Println("debug handshakePacket", hp)
 	response, err := prepareChallengeResponse(hp)
 	if err != nil {
 		return
 	}
-	fmt.Println("debug before sendToStream", response)
 	err = sendResponse(s, response.Bytes())
-	fmt.Println("debug err", err)
 	if err != nil {
 		return
 	}
@@ -64,9 +57,7 @@ func handleHandshakeInitChallenge(s network.Stream) (err error) {
 
 // 4
 func checkHandshakeResult(s network.Stream) (err error) {
-	fmt.Println("debug checkHandshakeResult start")
 	ok, err := readHandshakeResult(s)
-	fmt.Println("debug readHandshakeResult", ok, err)
 	if err != nil {
 		return
 	}
@@ -75,7 +66,7 @@ func checkHandshakeResult(s network.Stream) (err error) {
 			"Handshake result not ok.")
 		return
 	}
-	fmt.Println("debug start shell session")
+	fmt.Println("debug start shell session!")
 	return sh.Client(StreamToConn(s)) // shell session
 }
 
@@ -96,13 +87,11 @@ func sendChallenge(s network.Stream,
 
 // 3
 func checkHandshakeResponse(s network.Stream) (err error) {
-	fmt.Println("debug checkHandshakeResponse")
 	hp, err := readHandshakePacket(s)
 	if err != nil {
 		fmt.Println("debug err", err)
 		return
 	}
-	fmt.Println("debug hp", hp)
 	ok := checkAgainstPendingHandshakes(hp)
 	g_activeSessions.Put(s.Conn().RemotePeer())
 	err = sendResponse(s, []byte{Boole2Byte(ok)})

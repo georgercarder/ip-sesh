@@ -3,7 +3,6 @@ package node
 import (
 	"crypto/ed25519"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	. "github.com/georgercarder/lockless-map"
@@ -37,10 +36,8 @@ func (m *HandshakeMgr) newHandshake(
 }
 
 func (m *HandshakeMgr) SendStop(domainName string) {
-	fmt.Println("debug SendStop start", domainName)
 	hs := m.DomainName2Handshake.Take(domainName)
 	if hs != nil {
-		fmt.Println("debug SendStop")
 		stop := true
 		hhs := hs.(*Handshake)
 		hhs.StopChnl <- stop
@@ -88,7 +85,6 @@ func (hp *HandshakePacket) Bytes() (b []byte) {
 
 func Slice2HandshakePacket(b []byte) (hp *HandshakePacket, err error) {
 	hp = new(HandshakePacket)
-	fmt.Println("debug Slice2HandshakePacket", b)
 	err = json.Unmarshal(b, &hp)
 	return
 }
@@ -102,7 +98,6 @@ func publishUntilChallenge(hp *HandshakePacket) {
 		}
 	}()
 	stopper := G_HandshakeMgr.Stop(hp.DomainName)
-	fmt.Println("debug stopper", stopper)
 	for {
 		select {
 		case <-pubCH:

@@ -97,7 +97,6 @@ func overwriteProofPath(path string) (updatedPath string, err error) {
 }
 
 func SafeFileRead(path string) (data []byte, err error) {
-	fmt.Println("debug SafeFileRead", path)
 	absPath, err := fp.Abs(path)
 	if err != nil {
 		// LOG ERR
@@ -121,7 +120,6 @@ func SafeFileRead(path string) (data []byte, err error) {
 		err = lf.Unlock()
 		// TODO LOG ERR
 	}()
-	fmt.Println("debug SafeFileRead", absPath)
 	data, err = ioutil.ReadFile(absPath)
 	// this frees the lock
 	if err != nil {

@@ -78,7 +78,6 @@ func sendBackToClient(
 
 func sendToStream(
 	s network.Stream, status StreamStatus, msg []byte) (err error) {
-	fmt.Println("debug sendToStream", status, msg)
 	return writeToStream(s, status, msg)
 }
 

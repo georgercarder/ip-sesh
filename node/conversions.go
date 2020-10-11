@@ -5,7 +5,6 @@ package node
 import (
 	"crypto/ed25519"
 	"crypto/sha256"
-	"fmt"
 
 	"github.com/ipfs/go-cid"
 	mh "github.com/multiformats/go-multihash"
@@ -32,7 +31,6 @@ func Key2Slice(k interface{}) (b []byte) {
 			return
 		}
 		b = []byte(*kk)
-		fmt.Println("debug Key2Slice", b)
 		return
 	case ed25519.PublicKey:
 		kk := k.(ed25519.PublicKey)
@@ -83,7 +81,6 @@ func String2PrivKey(s string) (pk *ed25519.PrivateKey) {
 }
 
 func PubFromPriv(priv ed25519.PrivateKey) (pub ed25519.PublicKey) {
-	fmt.Println("debug PUbFromPriv", priv)
 	pub = make([]byte, ed25519.PublicKeySize)
 	copy(pub[:], priv[32:]) // see crypto/ed25519 line 91
 	return

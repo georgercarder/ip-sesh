@@ -5,7 +5,6 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 
-	//"fmt"
 	"os/user"
 )
 

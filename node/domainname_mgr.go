@@ -28,9 +28,6 @@ var modInitializerDomNameMgr = mi.NewModInit(newDomNameMgr,
 	DomNameMgrInitTimeout, fmt.Errorf("*DomNameMgr init error."))
 
 func newDomNameMgr() (n interface{}) { // *DomNameMgr
-	fmt.Println("debug newDomNameMgr")
-	// TODO
-	// checks ~/.ipsshd/ipsshd.conf
 	// if domName not set, SafelyShutdown emitting error
 	// otherwise calls dnsLink w domName
 	nn := new(DomNameMgr)
