@@ -2,12 +2,9 @@ package main
 
 import (
 	"bufio"
-	"context"
-	"crypto/rand"
 
 	"fmt"
 	"os"
-	"time"
 
 	nd "github.com/georgercarder/ip-sesh/node"
 	sg "github.com/georgercarder/ip-sesh/subnet-genie"
@@ -20,31 +17,13 @@ func main() {
 	if err != nil {
 		fmt.Println("debug key err", err)
 	}*/
-	fmt.Println("debug client")
+	fmt.Println("client")
+	fmt.Println("initializing node ...")
 	n := nd.G_Node()
-	numPeers := 0
 	// fast bootstrap
-	for numPeers < 1000 {
-		ps := n.Peerstore.Peers()
-		numPeers = len(ps)
-		fmt.Println("debug peers", len(ps))
-		time.Sleep(100 * time.Millisecond)
-
-		go func() {
-			dht := n.DHT
-			rval := make([]byte, 32)
-			rand.Read(rval)
-			ctx, cancel := context.WithTimeout(
-				context.Background(), 2*time.Second)
-			defer cancel()
-			v, err := dht.GetValue(ctx, string(rval))
-
-			if err != nil {
-				//fmt.Println("debug err", err)
-			}
-			fmt.Println("debug v", v)
-		}()
-	}
+	sg.FastBootstrap((*core.IpfsNode)(n))
+	ps := n.Peerstore.Peers()
+	fmt.Println("peers", len(ps))
 	go sg.JoinProviders((*core.IpfsNode)(n))
 	fmt.Println("Press ENTER for demo.")
 	getCharReader := bufio.NewReader(os.Stdin)

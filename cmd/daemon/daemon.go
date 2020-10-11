@@ -12,12 +12,13 @@ import (
 func main() {
 	//go nd.G_Node()
 
+	fmt.Println("initializing node ...")
 	n := nd.G_Node()
-	fmt.Println("debug Identity", n.Identity)
-	ps := n.Peerstore.Peers()
-	fmt.Println("debug peers", len(ps))
+	fmt.Println("Identity", n.Identity)
 	// fast bootstrap
 	sg.FastBootstrap((*core.IpfsNode)(n))
+	ps := n.Peerstore.Peers()
+	fmt.Println("peers", len(ps))
 	// announce provide
 	go sg.AnnounceProvide((*core.IpfsNode)(n))
 	// serve domain
