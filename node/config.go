@@ -3,6 +3,8 @@ package node
 import (
 	"encoding/json"
 	"sync"
+
+	. "github.com/georgercarder/lockless-map"
 )
 
 var G_ConfigMgr = newConfigMgr() // TODO use mod_init
@@ -37,6 +39,10 @@ func newConfigMgr() (c *configMgr) {
 			sampleAuthorized)
 		SaveConfig(cc.Cfg) // puts a template for user to fill out
 	}
+	G_ValidClientDomains = NewLocklessMap()
+	for _, d := range cc.Cfg.Client.Domains {
+		G_ValidClientDomains.Put(d.Domain, true)
+	}
 	c = cc
 	return
 }
@@ -55,6 +61,17 @@ type Config struct {
 
 type Client struct {
 	Domains []*DomainNKeyfile `json:"domains"`
+}
+
+var G_ValidClientDomains LocklessMap
+
+func ClientDomainIsValid(domain string) (ok bool) {
+	d := G_ValidClientDomains.Take(domain)
+	if d == nil {
+		return
+	}
+	ok = d.(bool)
+	return
 }
 
 type Server struct {

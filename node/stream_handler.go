@@ -63,7 +63,7 @@ func checkHandshakeResult(s network.Stream) (err error) {
 			"Handshake result not ok.")
 		return
 	}
-	fmt.Println("debug start shell session!")
+	fmt.Println("start shell session!")
 	return sh.Client(StreamToConn(s)) // shell session
 }
 

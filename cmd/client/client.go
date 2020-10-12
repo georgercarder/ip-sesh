@@ -1,37 +1,28 @@
 package main
 
 import (
+	"fmt"
+	"net"
 	"bufio"
 
-	"fmt"
 	"os"
-
-	nd "github.com/georgercarder/ip-sesh/node"
-	sg "github.com/georgercarder/ip-sesh/subnet-genie"
-
-	"github.com/ipfs/go-ipfs/core"
 )
 
 func main() {
-	/*err := nd.GenerateAndSaveKeypair("cats")
-	if err != nil {
-		fmt.Println("debug key err", err)
-	}*/
-	fmt.Println("client")
-	fmt.Println("initializing node ...")
-	n := nd.G_Node()
-	// fast bootstrap
-	sg.FastBootstrap((*core.IpfsNode)(n))
-	ps := n.Peerstore.Peers()
-	fmt.Println("peers", len(ps))
-	go sg.JoinProviders((*core.IpfsNode)(n))
 	fmt.Println("Press ENTER for demo.")
 	getCharReader := bufio.NewReader(os.Stdin)
-	_, err := getCharReader.ReadString('\n')
+	domain, err := getCharReader.ReadString('\n')
 	if err != nil {
 		fmt.Println("debug error", err)
 	}
-	nd.StartHandshake("test.domain.com")
-
+	fmt.Println("debug domain", domain)
+	//nd.StartHandshake("test.domain.com")
+	conn, err := net.Dial("tcp", "127.0.0.1:8081")
+	if err != nil {
+		// TODO LOG, AND GRACEFUL
+		panic(err)
+	}
+	conn.Write([]byte(domain))
+	fmt.Println("debug conn", conn)
 	select {}
 }
