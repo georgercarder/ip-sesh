@@ -15,15 +15,15 @@ import (
 
 // client
 
-type ConnPacket struct {
+type ConnBundle struct {
 	Conn   net.Conn
 	StopCH (chan bool)
 }
 
 // 1. pub {domName, nonce + H(pubKey, nonce)}
 
-func StartHandshake(domainName string) chan *ConnPacket {
-	connPacketCH := make(chan *ConnPacket, 1)
+func StartHandshake(domainName string) chan *ConnBundle {
+	connBundleCH := make(chan *ConnBundle, 1)
 	pubKey := pickPubKey(domainName) // in ssh_mgr
 	nonce := genNonce()              // in crypto
 	//fmt.Println("debug pubKey", pubKey)
@@ -32,9 +32,9 @@ func StartHandshake(domainName string) chan *ConnPacket {
 	//fmt.Println("debug hash", hash)
 	hp := &HandshakePacket{DomainName: domainName,
 		Nonce: nonce, Hash: hash}
-	G_HandshakeMgr.newHandshake(hp, pubKey, connPacketCH)
+	G_HandshakeMgr.newHandshake(hp, pubKey, connBundleCH)
 	go publishUntilChallenge(hp)
-	return connPacketCH
+	return connBundleCH
 }
 
 // 3. respond to challenge

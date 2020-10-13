@@ -68,10 +68,10 @@ func main() {
 				fmt.Println("debug domain valid", domain)
 				// TODO start thread for that session
 				// TODO pipe to calling client
-				connPacketCH := nd.StartHandshake(domain)
+				connBundleCH := nd.StartHandshake(domain)
 				// TODO PUT TIMEOUT
-				cp := <-connPacketCH
-				fmt.Println("debug connPacket received", cp)
+				cp := <-connBundleCH
+				fmt.Println("debug connBundle received", cp)
 				go func() {
 					_, _ = io.Copy(cp.Conn, conn)
 					cp.StopCH <- true
