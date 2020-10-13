@@ -23,13 +23,16 @@ type HandshakeMgr struct {
 }
 
 func (m *HandshakeMgr) newHandshake(
-	hp *HandshakePacket, pubKey *ed25519.PublicKey) {
+	hp *HandshakePacket,
+	pubKey *ed25519.PublicKey,
+	spCH chan *StreamPacket) {
 	hs := &Handshake{
-		DomainName: hp.DomainName,
-		Nonce:      hp.Nonce,
-		Challenge:  hp.Challenge,
-		PubKey:     pubKey,
-		LastTouch:  time.Now()}
+		DomainName:  hp.DomainName,
+		Nonce:       hp.Nonce,
+		Challenge:   hp.Challenge,
+		PubKey:      pubKey,
+		LastTouch:   time.Now(),
+		StreamPktCH: spCH}
 	hs.StopChnl = make(chan bool)
 	m.DomainName2Handshake.Put(hp.DomainName, hs)
 	m.Nonce2Handshake.Put(string(hp.Nonce), hs)
@@ -56,12 +59,13 @@ func (m *HandshakeMgr) Stop(domainName string) <-chan bool {
 }
 
 type Handshake struct {
-	DomainName string
-	Nonce      []byte
-	Challenge  []byte
-	PubKey     *ed25519.PublicKey
-	StopChnl   (chan bool)
-	LastTouch  time.Time
+	DomainName  string
+	Nonce       []byte
+	Challenge   []byte
+	PubKey      *ed25519.PublicKey
+	StopChnl    (chan bool)
+	LastTouch   time.Time
+	StreamPktCH (chan *StreamPacket)
 }
 
 const publishInterval = 1 * time.Second // TODO put elsewhere and tune

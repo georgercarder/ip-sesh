@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net"
 
 	nd "github.com/georgercarder/ip-sesh/node"
@@ -58,16 +59,26 @@ func main() {
 				// LOG ERR
 				continue
 			}
-			fmt.Println("debug domain", string(b[:n-len("\n")]), b[:n])
-			domain := string(b[:n-len("\n")])
-			ok := nd.ClientDomainIsValid(domain)
-			if !ok {
-				// LOG 
-				continue
-			}
-			fmt.Println("debug domain valid", domain)
-			// TODO start thread for that session
-			//nd.StartHandshake("test.domain.com")
+			go func() {
+				domain := string(b[:n-len("\n")])
+				ok := nd.ClientDomainIsValid(domain)
+				if !ok {
+					// LOG 
+					return
+				}
+				fmt.Println("debug domain valid", domain)
+				// TODO start thread for that session
+				// TODO pipe to calling client
+				streamPacketCH := nd.StartHandshake(domain)
+				sp := <- streamPacketCH
+				fmt.Println("debug streamPacket received", sp)
+				go func() {
+					_, _ = io.Copy(sp.Stream, conn)
+					sp.StopCH <- true
+				}()
+				_, err = io.Copy(conn, sp.Stream)
+				sp.StopCH <- true
+			}()
 		}
 
 	}	

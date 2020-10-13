@@ -49,11 +49,11 @@ func handleHandshakeInitChallenge(s network.Stream) (err error) {
 	if err != nil {
 		return
 	}
-	return checkHandshakeResult(s)
+	return checkHandshakeResult(s, hp)
 }
 
 // 4
-func checkHandshakeResult(s network.Stream) (err error) {
+func checkHandshakeResult(s network.Stream, hp *HandshakePacket) (err error) {
 	ok, err := readHandshakeResult(s)
 	if err != nil {
 		return
@@ -63,8 +63,18 @@ func checkHandshakeResult(s network.Stream) (err error) {
 			"Handshake result not ok.")
 		return
 	}
-	fmt.Println("start shell session!")
-	return sh.Client(StreamToConn(s)) // shell session
+	// TODO PASS STREAMPACKETCH HERE
+	h := G_HandshakeMgr.Nonce2Handshake.Take(string(hp.Nonce))
+	if h == nil {
+		err = fmt.Errorf("nonce does not map to a handshake.")
+		return
+	}
+	hs := h.(*Handshake)
+	stopCH := make(chan bool, 1)
+	hs.StreamPktCH <- &StreamPacket{Stream: s, StopCH: stopCH}
+	_ = <-stopCH // holds stream open while clientDaemon uses it
+	//return sh.Client(StreamToConn(s)) // shell session
+	return
 }
 
 // server
@@ -74,7 +84,7 @@ func sendChallenge(s network.Stream,
 	nonce []byte, pk *ed25519.PublicKey) (err error) {
 	chlg := prepareChallenge()
 	hp := &HandshakePacket{Challenge: chlg, PubKey: pk, Nonce: nonce}
-	G_HandshakeMgr.newHandshake(hp, pk)
+	G_HandshakeMgr.newHandshake(hp, pk, nil)
 	err = sendToStream(s, HandshakeInitChallenge, hp.Bytes())
 	if err != nil {
 		return

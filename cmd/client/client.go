@@ -22,6 +22,11 @@ func main() {
 		// TODO LOG, AND GRACEFUL
 		panic(err)
 	}
+	go func() {
+		b := make([]byte, 1024)
+		n, err := conn.Read(b)
+		fmt.Println("debug", n, string(b), err)
+	}()
 	conn.Write([]byte(domain))
 	fmt.Println("debug conn", conn)
 	select {}
