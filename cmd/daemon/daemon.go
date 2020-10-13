@@ -7,6 +7,7 @@ import (
 	"net"
 
 	nd "github.com/georgercarder/ip-sesh/node"
+	sh "github.com/georgercarder/ip-sesh/shell"
 	sg "github.com/georgercarder/ip-sesh/subnet-genie"
 
 	"github.com/ipfs/go-ipfs/core"
@@ -72,6 +73,7 @@ func main() {
 				// TODO PUT TIMEOUT
 				cp := <-connBundleCH
 				fmt.Println("debug connBundle received", cp)
+				conn.Write([]byte(sh.StartShellSession))
 				go func() {
 					_, _ = io.Copy(cp.Conn, conn)
 					cp.StopCH <- true
