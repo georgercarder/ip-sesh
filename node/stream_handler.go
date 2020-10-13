@@ -71,7 +71,7 @@ func checkHandshakeResult(s network.Stream, hp *HandshakePacket) (err error) {
 	}
 	hs := h.(*Handshake)
 	stopCH := make(chan bool, 1)
-	hs.StreamPktCH <- &StreamPacket{Stream: s, StopCH: stopCH}
+	hs.ConnPktCH <- &ConnPacket{Conn: StreamToConn(s), StopCH: stopCH}
 	_ = <-stopCH // holds stream open while clientDaemon uses it
 	//return sh.Client(StreamToConn(s)) // shell session
 	return

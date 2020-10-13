@@ -12,9 +12,8 @@ import (
 	"github.com/ipfs/go-ipfs/core"
 )
 
-
 func main() {
-	role := flag.String("role", "server", 
+	role := flag.String("role", "server",
 		"daemon role can be server or client.")
 	flag.Parse()
 	switch *role {
@@ -55,7 +54,7 @@ func main() {
 			fmt.Println("debug connection", conn)
 			b := make([]byte, 1024)
 			n, err := conn.Read(b)
-			if err != nil{
+			if err != nil {
 				// LOG ERR
 				continue
 			}
@@ -63,24 +62,25 @@ func main() {
 				domain := string(b[:n-len("\n")])
 				ok := nd.ClientDomainIsValid(domain)
 				if !ok {
-					// LOG 
+					// LOG
 					return
 				}
 				fmt.Println("debug domain valid", domain)
 				// TODO start thread for that session
 				// TODO pipe to calling client
-				streamPacketCH := nd.StartHandshake(domain)
-				sp := <- streamPacketCH
-				fmt.Println("debug streamPacket received", sp)
+				connPacketCH := nd.StartHandshake(domain)
+				// TODO PUT TIMEOUT
+				cp := <-connPacketCH
+				fmt.Println("debug connPacket received", cp)
 				go func() {
-					_, _ = io.Copy(sp.Stream, conn)
-					sp.StopCH <- true
+					_, _ = io.Copy(cp.Conn, conn)
+					cp.StopCH <- true
 				}()
-				_, err = io.Copy(conn, sp.Stream)
-				sp.StopCH <- true
+				_, err = io.Copy(conn, cp.Conn)
+				cp.StopCH <- true
 			}()
 		}
 
-	}	
+	}
 	select {}
 }

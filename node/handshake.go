@@ -5,25 +5,25 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
+	"net"
 
 	"github.com/georgercarder/same"
 
-	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
 
 // client
 
-type StreamPacket struct {
-	Stream network.Stream
+type ConnPacket struct {
+	Conn   net.Conn
 	StopCH (chan bool)
 }
 
 // 1. pub {domName, nonce + H(pubKey, nonce)}
 
-func StartHandshake(domainName string) chan *StreamPacket {
-	streamPacketCH := make(chan *StreamPacket, 1)
+func StartHandshake(domainName string) chan *ConnPacket {
+	connPacketCH := make(chan *ConnPacket, 1)
 	pubKey := pickPubKey(domainName) // in ssh_mgr
 	nonce := genNonce()              // in crypto
 	//fmt.Println("debug pubKey", pubKey)
@@ -32,9 +32,9 @@ func StartHandshake(domainName string) chan *StreamPacket {
 	//fmt.Println("debug hash", hash)
 	hp := &HandshakePacket{DomainName: domainName,
 		Nonce: nonce, Hash: hash}
-	G_HandshakeMgr.newHandshake(hp, pubKey, streamPacketCH)
+	G_HandshakeMgr.newHandshake(hp, pubKey, connPacketCH)
 	go publishUntilChallenge(hp)
-	return streamPacketCH
+	return connPacketCH
 }
 
 // 3. respond to challenge
