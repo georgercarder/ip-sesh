@@ -4,8 +4,9 @@ import (
 	"crypto"
 	"crypto/ed25519"
 	"crypto/rand"
-
 	"os/user"
+
+	. "github.com/georgercarder/ip-sesh/common"
 )
 
 func Home_Dir() (hd string, err error) {
