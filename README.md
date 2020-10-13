@@ -4,7 +4,9 @@ Secure shell session leveraging IPFS's libp2p to enable more secure handshake an
 
 #### Status: verrry pre-alpha. Proof of concept complete. Some time before it's a "daily driver".
 
-Motivation: A frequently encountered prompt while using conventional ssh client is the following:
+#### Motivation: 
+
+A frequently encountered prompt while using conventional ssh client is the following:
 ```
 The authenticity of host 'example.com (xxx.xxx.xxx.xxx)' can't be established.
 ECDSA key fingerprint is SHA256:KI0kMBUx4KAV4TIIhNLdiw1qEU27+7oOa+2M2KAtL+o.
