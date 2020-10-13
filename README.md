@@ -18,3 +18,5 @@ Our goal is to construct a more secure handshake "out of the box" requiring less
 
 
 // TODO formally write handshake spec (it's already designed and implemented)
+
+// TODO USAGE
