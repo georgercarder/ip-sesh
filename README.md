@@ -17,4 +17,4 @@ The **power user** knows the extra steps needed to prevent this message, but the
 Our goal is to construct a more secure handshake "out of the box" requiring less configuration than the conventional solution. We have leveraged some of the security features of IPFS's libp2p networking stack to design an updated session handshake that has fast resolution and requires very little configuration compared to former solutions. See the full spec of the handshake below. A happy surprise in this new design is we found it securely enables a shell session multiplexed over a family of hosts, perhaps one on each planet...
 
 
-// TODO write handshake spec
+// TODO formally write handshake spec (it's already designed and implemented)
