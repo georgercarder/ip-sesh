@@ -1,7 +1,5 @@
 package node
 
-// CONVERSIONS TODO PUT IN COMMON
-
 import (
 	"crypto/ed25519"
 	"crypto/sha256"

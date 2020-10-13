@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	. "github.com/georgercarder/ip-sesh/common"
 	nd "github.com/georgercarder/ip-sesh/node"
 
 	"github.com/ipfs/go-ipfs/core"
@@ -37,7 +38,7 @@ func FastBootstrap(n *core.IpfsNode) {
 
 func AnnounceProvide(n *core.IpfsNode) {
 	for { // an interval
-		key, err := nd.String2CID("/ip-sesh/0.0.1")
+		key, err := String2CID("/ip-sesh/0.0.1")
 		if err != nil {
 			fmt.Println("debug conv err", err)
 		}
@@ -55,7 +56,7 @@ func AnnounceProvide(n *core.IpfsNode) {
 // the point is to connect with providers of "/ip-sesh/0.0.1"
 // to propagate the pubsub pubs to these "providers"
 func JoinProviders(n *core.IpfsNode) {
-	key, err := nd.String2CID("/ip-sesh/0.0.1")
+	key, err := String2CID("/ip-sesh/0.0.1")
 	if err != nil {
 		fmt.Println("debug conv err", err)
 	}
