@@ -83,3 +83,16 @@ func PubFromPriv(priv ed25519.PrivateKey) (pub ed25519.PublicKey) {
 	copy(pub[:], priv[32:]) // see crypto/ed25519 line 91
 	return
 }
+
+// trims byte(0), byte(0xa) byte(0x20)
+func Trim(s string) (ret string) {
+	// TODO PUT IN COMMON BUT IS HERE
+	// SINCE IS USED TO COMPARE STARTSHELLSESSION
+	lastByte := byte(s[len(s)-1])
+	if lastByte == byte(0x0) || lastByte == byte(0xa) || lastByte == byte(0x20) {
+		return Trim(s[:len(s)-1])
+	}
+	ret = s
+	return
+
+}
