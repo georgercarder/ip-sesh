@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 
+	. "github.com/georgercarder/ip-sesh/common"
 	sh "github.com/georgercarder/ip-sesh/shell"
 )
 
@@ -25,10 +26,8 @@ func main() {
 	conn.Write([]byte(domain))
 	//nd.StartHandshake("test.domain.com")
 	b := make([]byte, 1024)
-	n, err := conn.Read(b)
-	fmt.Println("debug", n, string(b), err)
-	fmt.Println("debug ", len(string(b)), len(sh.StartShellSession), b, []byte("hey  \n"), len(sh.Trim(string(b))))
-	if sh.Trim(string(b)) == sh.StartShellSession {
+	_, err = conn.Read(b)
+	if Trim(string(b)) == sh.StartShellSession {
 		fmt.Println("debug START SHELL SESSION HERE")
 		sh.Client(conn)
 	}
