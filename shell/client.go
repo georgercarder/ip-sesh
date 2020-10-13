@@ -1,7 +1,6 @@
 package shell
 
 import (
-	"fmt"
 	"io"
 	"net"
 	"os"
@@ -19,9 +18,7 @@ func Client(conn net.Conn) (err error) {
 	defer terminal.Restore(int(os.Stdin.Fd()), oldState)
 	go func() {
 		_, _ = io.Copy(os.Stdout, conn)
-		fmt.Println("debug after1")
 	}()
 	_, err = io.Copy(conn, os.Stdin)
-	fmt.Println("debug after2")
 	return err
 }

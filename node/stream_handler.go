@@ -73,6 +73,7 @@ func checkHandshakeResult(s network.Stream, hp *HandshakePacket) (err error) {
 	stopCH := make(chan bool, 1)
 	hs.ConnBundleCH <- &ConnBundle{Conn: StreamToConn(s), StopCH: stopCH}
 	_ = <-stopCH // holds stream open while clientDaemon uses it
+	fmt.Println("debug stopCH")
 	//return sh.Client(StreamToConn(s)) // shell session
 	return
 }

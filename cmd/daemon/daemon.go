@@ -52,6 +52,7 @@ func main() {
 				// TODO LOG
 				break // TODO UPDATE FOR FOR LOOP
 			}
+			//defer conn.Close()
 			fmt.Println("debug connection", conn)
 			b := make([]byte, 1024)
 			n, err := conn.Read(b)
@@ -60,7 +61,8 @@ func main() {
 				continue
 			}
 			go func() {
-				domain := string(b[:n-len("\n")])
+				defer conn.Close()
+				domain := string(b[:n])
 				ok := nd.ClientDomainIsValid(domain)
 				if !ok {
 					// LOG
@@ -71,15 +73,14 @@ func main() {
 				// TODO pipe to calling client
 				connBundleCH := nd.StartHandshake(domain)
 				// TODO PUT TIMEOUT
-				cp := <-connBundleCH
-				fmt.Println("debug connBundle received", cp)
+				cb := <-connBundleCH
 				conn.Write([]byte(sh.StartShellSession))
 				go func() {
-					_, _ = io.Copy(cp.Conn, conn)
-					cp.StopCH <- true
+					_, _ = io.Copy(cb.Conn, conn)
+					cb.StopCH <- true
 				}()
-				_, err = io.Copy(conn, cp.Conn)
-				cp.StopCH <- true
+				_, err = io.Copy(conn, cb.Conn)
+				cb.StopCH <- true
 			}()
 		}
 
