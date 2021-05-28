@@ -1,4 +1,4 @@
-### InterPlanetary Secure Extended Shell
+### InterPlanetary Secure Extended Shell  
 
 Secure shell session leveraging IPFS's libp2p to construct more secure handshake with extended capabilities over hosts spanning a solar system and beyond.
 
