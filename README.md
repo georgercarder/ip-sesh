@@ -2,21 +2,4 @@
 
 Secure shell session leveraging IPFS's libp2p to construct more secure handshake with extended capabilities over hosts spanning a solar system and beyond.
 
-#### Status: verrry pre-alpha. Proof of concept complete. Some time before it's a "daily driver".
-
-#### Motivation: 
-
-A frequently encountered prompt while using conventional ssh client is the following:
-```
-The authenticity of host 'example.com (xxx.xxx.xxx.xxx)' can't be established.
-ECDSA key fingerprint is SHA256:KI0kMBUx4KAV4TIIhNLdiw1qEU27+7oOa+2M2KAtL+o.
-Are you sure you want to continue connecting (yes/no/[fingerprint])? 
-```
-The **power user** knows the extra steps needed to prevent this message, but the typical user may choose `yes` as an answer to this prompt. This can leave this session open to a "man in the middle" attack so that all data communicated over the channel defined by this session can be collected by an adversary.
-
-Our goal is to construct a more secure handshake "out of the box" requiring less configuration than the conventional solution. We have leveraged some of the security features of IPFS's libp2p networking stack to design an updated session handshake that has fast resolution and requires very little configuration compared to former solutions. See the full spec of the handshake below. A happy surprise in this new design is we found it securely enables a shell session multiplexed over a family of hosts, perhaps one on each planet...
-
-
-// TODO formally write handshake spec (it's already designed and implemented)
-
-// TODO USAGE
+#### Status: 12/1/2021 found easy way to break handshake and is vulnerable to MIM. must fix. ~verrry pre-alpha. Proof of concept complete. Some time before it's a "daily driver".~
